@@ -1,5 +1,6 @@
 import copy
 import json
+from functools import lru_cache
 import subprocess
 import time
 from typing import Any, Dict, List, Optional
@@ -57,22 +58,16 @@ class Onsen(Radio):
             self._driver.quit()
             self._driver = None
 
+    @lru_cache(maxsize=1)
     def _get_information(self) -> Dict[str, Any]:
         self._driver.get("https://www.onsen.ag/")
         ret = self._driver.execute_script("return JSON.stringify(window.__NUXT__);")
         return json.loads(ret)
 
-    def _get_program_summary_content(self, url: str) -> str:
-        self._driver.get(url)
-        ret = self._driver.find_element_by_xpath(
-            '//*[@id="__layout"]/div/div[1]/article/div[1]/div/div/div/div[2]/div[2]/div/span'
-        )
-        return ret
-
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
-        infomation = self._get_information()
+        information = self._get_information()
         ret = []
-        for raw_program in infomation["state"]["programs"]["programs"]["all"]:
+        for raw_program in information["state"]["programs"]["programs"]["all"]:
             if filters and not raw_program["directory_name"] in filters:
                 continue
             program_url = (

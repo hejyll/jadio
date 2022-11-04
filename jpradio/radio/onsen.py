@@ -26,6 +26,10 @@ class Onsen(Radio):
         return "onsen.ag"
 
     @property
+    def name_en(self) -> str:
+        return "Internet Radio Station <Onsen>"
+
+    @property
     def name_jp(self) -> str:
         return "インターネットラジオステーション＜音泉＞"
 

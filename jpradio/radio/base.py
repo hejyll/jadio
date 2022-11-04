@@ -14,6 +14,10 @@ class Radio(abc.ABC):
         ...
 
     @abc.abstractproperty
+    def name_en(self) -> str:
+        ...
+
+    @abc.abstractproperty
     def name_jp(self) -> str:
         ...
 

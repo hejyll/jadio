@@ -197,17 +197,23 @@ class Radiko(Radio):
 
     @lru_cache(maxsize=256)
     def _get_program_station_weekly(self, station_id: str) -> Dict[str, str]:
-        return _parse_programs_tree(
-            self._get(f"v3/program/station/weekly/{station_id}.xml", "tree")
-        )
+        try:
+            ret = self._get(f"v3/program/station/weekly/{station_id}.xml", "tree")
+        except requests.exceptions.HTTPError:
+            return {}
+        except requests.exceptions.ReadTimeout:
+            return {}
+        return _parse_programs_tree(ret)
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []
         for station in self._get_station_region_full():
             if filters and station["id"].lower() not in filters:
                 continue
-            raw_programs = self._get_program_station_weekly(station["id"])["stations"]
-            raw_programs = raw_programs[0]  # len(raw_programs) == 1
+            raw_programs = self._get_program_station_weekly(station["id"])
+            if not raw_programs:
+                continue
+            raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1
             for raw_program in raw_programs["progs"]:
                 ft = to_datetime(raw_program["attr"]["ft"])
                 raw = {

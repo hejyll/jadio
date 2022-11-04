@@ -2,8 +2,6 @@ import dataclasses
 import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from mutagen import mp4
-
 from .util import get_image
 
 
@@ -60,14 +58,6 @@ class Program:
             if covr:
                 ret["covr"] = [covr]
         return ret
-
-    def set_tag(self, filename: str) -> None:
-        tag = self.get_tag()
-        media = mp4.MP4(filename)
-        for key, value in tag.items():
-            if value is not None:
-                media[key] = value
-        media.save()
 
     def to_dict(self, serializable: bool = False) -> Dict[str, Any]:
         dt = self.datetime.strftime("%Y-%m-%d %H:%M") if serializable else self.datetime

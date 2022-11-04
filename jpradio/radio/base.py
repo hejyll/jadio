@@ -1,6 +1,8 @@
 import abc
 from typing import List, Optional
 
+from mutagen import mp4
+
 from ..program import Program
 
 
@@ -43,7 +45,12 @@ class Radio(abc.ABC):
     def download(self, program: Program, filename: str, set_tag: bool = True) -> None:
         self.download_media(program, filename)
         if set_tag:
-            program.set_tag(filename)
+            tag = program.get_tag()
+            media = mp4.MP4(filename)
+            for key, value in tag.items():
+                if value is not None:
+                    media[key] = value
+            media.save()
 
     @abc.abstractmethod
     def download_media(self, program: Program, filename: str) -> None:

@@ -1,6 +1,10 @@
 import datetime
-from typing import Optional, Union
+import json
+import re
+from typing import Any, Dict, List, Optional, Union
+from xml.etree import ElementTree
 
+import html2text
 import requests
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -87,6 +91,50 @@ def to_datetime(dt: Union[int, str, None]) -> datetime.datetime:
     return dt
 
 
+def _remove_callback(text: str) -> str:
+    if text == "callback();":
+        return None
+    return text[9:-3] if text[:8] == "callback" else text
+
+
+def _parse_json(text: str) -> Dict[str, str]:
+    text = _remove_callback(text)
+    return json.loads(text) if text else None
+
+
+def _parse_qs(text: str, separator: str = "\r\n") -> Dict[str, str]:
+    ret = {}
+    for key_value in text.split(separator):
+        if len(key_value) == 0:
+            break
+        key, value = key_value.split("=")
+        ret[key] = value
+    return ret
+
+
+def _convert_content(content: bytes, content_type: str = "text") -> Dict[str, str]:
+    if content_type == "byte":
+        ret = content
+    else:
+        ret = {
+            "text": lambda x: x,
+            "json": _parse_json,
+            "tree": ElementTree.fromstring,
+            "qs": _parse_qs,
+        }.get(content_type, lambda x: None)(content.decode("utf-8"))
+    return ret
+
+
+def get_content(response: requests.Response, content_type: str = "text") -> Any:
+    ret = {
+        "raw": response,
+        "headers": response.headers,
+    }.get(content_type, _convert_content(response.content, content_type))
+    if ret is None:
+        raise ValueError(f"{content_type} is not supported content_type")
+    return ret
+
+
 def get_image(url: str) -> Optional[bytes]:
     """Get image data.
 
@@ -94,9 +142,16 @@ def get_image(url: str) -> Optional[bytes]:
         url (str): target url.
 
     Returns:
-        byte: downloaded image data.
+        bytes: downloaded image data.
     """
-    if not isinstance(url, str):
-        return url
     response = requests.get(url)
-    return response.content if response.ok else None
+    response.raise_for_status()
+    return get_content(response, content_type="byte")
+
+
+def convert_html_to_text(x: str) -> str:
+    return html2text.html2text(x)
+
+
+def get_emails_from_text(x: str) -> List[str]:
+    return re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", x)

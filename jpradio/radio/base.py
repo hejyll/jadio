@@ -28,14 +28,16 @@ class Radio(abc.ABC):
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.close()
 
-    def login(self, *args) -> None:
+    def login(self) -> None:
         return None
 
     def close(self) -> None:
         return None
 
     @abc.abstractmethod
-    def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
+    def get_programs(
+        self, filters: Optional[List[str]] = None, **kwargs
+    ) -> List[Program]:
         ...
 
     def download(self, program: Program, filename: str, set_tag: bool = True) -> None:

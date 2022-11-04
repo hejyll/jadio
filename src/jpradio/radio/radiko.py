@@ -208,7 +208,7 @@ class Radiko(Radio):
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []
         for station in self._get_station_region_full():
-            if filters and station["id"].lower() not in filters:
+            if filters and station["id"] not in filters:
                 continue
             raw_programs = self._get_program_station_weekly(station["id"])
             if not raw_programs:

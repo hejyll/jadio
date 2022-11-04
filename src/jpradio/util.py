@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import re
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
@@ -169,3 +170,22 @@ def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
         return False
     else:
         return check_dict_deep(x[key], keys[1:])
+
+
+def get_config_path() -> str:
+    return os.path.join(os.path.expanduser("~"), ".config", "jpradio", "config.json")
+
+
+def load_config(path: Optional[str] = None) -> str:
+    path = path or get_config_path()
+    with open(path, "r") as fh:
+        return json.load(fh)
+
+
+def get_login_info_from_config(radio_name: str) -> Dict[str, str]:
+    config = load_config()
+    if not check_dict_deep(config, [radio_name, "mail"]):
+        raise RuntimeError(f"'{radio_name}/mail' key is not found")
+    if not check_dict_deep(config, [radio_name, "password"]):
+        raise RuntimeError(f"'{radio_name}/password' key is not found")
+    return config[radio_name]

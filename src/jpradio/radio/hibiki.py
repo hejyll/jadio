@@ -17,7 +17,9 @@ class Hibiki(Radio):
 
     def _get(self, href: str) -> Dict[str, Any]:
         url = urljoin("https://vcms-api.hibiki-radio.jp/api/v1/", href)
-        response = self._session.get(url, headers={"X-Requested-With": "XMLHttpRequest"})
+        response = self._session.get(
+            url, headers={"X-Requested-With": "XMLHttpRequest"}
+        )
         response.raise_for_status()
         return json.loads(response.text)
 

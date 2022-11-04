@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import requests
 
 from ..program import Program
-from ..util import to_datetime
+from ..util import check_dict_deep, to_datetime
 from .base import Radio
 
 
@@ -47,11 +47,7 @@ class Hibiki(Radio):
         for raw_program in self._get("programs"):
             if filters and not raw_program["access_id"].lower() in filters:
                 continue
-            if (
-                not raw_program["episode"]
-                or "video" not in raw_program["episode"]
-                or "id" not in raw_program["episode"]["video"]
-            ):
+            if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
             detail = self._get(f"programs/{raw_program['access_id']}")
             performers = [p["name"] for p in detail["casts"]]

@@ -157,3 +157,15 @@ def convert_html_to_text(x: str) -> str:
 
 def get_emails_from_text(x: str) -> List[str]:
     return re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", x)
+
+
+def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
+    if len(keys) == 0:
+        return True
+    key = keys[0]
+    if key not in x:
+        return False
+    elif not isinstance(x[key], dict) and len(keys) > 1:
+        return False
+    else:
+        return check_dict_deep(x[key], keys[1:])

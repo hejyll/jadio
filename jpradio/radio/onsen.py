@@ -79,9 +79,9 @@ class Onsen(Radio):
                 f"https://www.onsen.ag/program/{raw_program['directory_name']}"
             )
             performers = [p["name"] for p in raw_program["performers"]]
-            info = None
+            description = None
             if len(raw_program["related_links"]) > 0:
-                info = raw_program["related_links"][0]["link_url"]
+                description = raw_program["related_links"][0]["link_url"]
             for content in raw_program["contents"]:
                 raw = copy.deepcopy(raw_program)
                 raw["contents"] = [content]
@@ -99,8 +99,8 @@ class Onsen(Radio):
                     station_id=self.name,
                     station_url=self.url,
                     performers=performers,
-                    desc=raw_program["delivery_interval"],
-                    info=info,
+                    description=description,
+                    information=raw_program["delivery_interval"],
                     copyright=raw_program["copyright"],
                     datetime=delivery_date,
                     is_movie=content["movie"],

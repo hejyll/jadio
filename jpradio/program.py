@@ -21,8 +21,8 @@ class Program:
     station_id: Union[int, str]
     station_url: str
     performers: List[str]
-    desc: str
-    info: str
+    description: str
+    information: str
     copyright: str
     datetime: datetime.datetime
     duration: Optional[int] = None  # unit: minutes
@@ -45,13 +45,13 @@ class Program:
             # Year
             "\xa9day": self.datetime.strftime("%Y-%m-%d"),
             # Commnet
-            "\xa9cmt": self.info,
+            "\xa9cmt": self.information,
             # Genre
             "\xa9gen": "Radio",
             # Podcasts fieldsppp
             "pcst": False,
             "purl": self.program_url,
-            "desc": self.desc,
+            "desc": self.description,
             "purd": self.datetime.strftime("%Y-%m-%d %H:%M:%S"),
             "cprt": self.copyright,
         }
@@ -84,8 +84,8 @@ class Program:
             "station_id": self.station_id,
             "station_url": self.station_url,
             "performers": self.performers,
-            "desc": self.desc,
-            "info": self.info,
+            "description": self.description,
+            "information": self.information,
             "copyright": self.copyright,
             "datetime": dt,
             "duration": self.duration,

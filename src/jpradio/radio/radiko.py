@@ -269,24 +269,12 @@ class Radiko(Radio):
         )
 
         url = re.findall("^https?://.+m3u8$", playlist, flags=(re.MULTILINE))[0]
-        cmd = [
-            "ffmpeg",
-            "-y",  # overwrite
-            "-loglevel",
-            "quiet",
-            "-headers",
-            f'"X-Radiko-Authtoken:{self._authtoken}"\r\n',
-            "-i",
-            url,
-            "-acodec",
-            "copy",
-            "-vn",
-            "-bsf:a",
-            "aac_adtstoasc",
-            "-timeout",
-            str(120),
-            "-t",
-            str(program.duration * 60),  # minutes to seconds
-            filename,
-        ]
+        cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
+        cmd += ["-headers", f'"X-Radiko-Authtoken:{self._authtoken}"\r\n']
+        cmd += ["-i", url]
+        cmd += ["-vn", "-acodec", "copy"]
+        cmd += ["-bsf:a", "aac_adtstoasc"]
+        cmd += ["-timeout", str(120)]
+        cmd += ["-t", str(program.duration * 60)]  # minutes to seconds
+        cmd += [filename]
         subprocess.run(cmd)

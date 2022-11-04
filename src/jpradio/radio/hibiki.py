@@ -78,19 +78,9 @@ class Hibiki(Radio):
     def download_media(self, program: Program, filename: str) -> None:
         video_id = program.raw["episode"]["video"]["id"]
         video = self._get(f"videos/play_check?video_id={video_id}")
-        cmd = [
-            "ffmpeg",
-            "-y",  # overwrite
-            "-loglevel",
-            "quiet",
-            "-i",
-            video["playlist_url"],
-            "-vcodec",
-            "copy",
-            "-acodec",
-            "copy",
-            "-bsf:a",
-            "aac_adtstoasc",
-            filename,
-        ]
+        cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
+        cmd += ["-i", video["playlist_url"]]
+        cmd += ["-vcodec", "copy", "-acodec", "copy"]
+        cmd += ["-bsf:a", "aac_adtstoasc"]
+        cmd += [filename]
         subprocess.run(cmd)

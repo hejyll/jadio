@@ -107,21 +107,10 @@ class Onsen(Radio):
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:
-        cmd = [
-            "ffmpeg",
-            "-y",  # overwrite
-            "-loglevel",
-            "quiet",
-            "-headers",
-            "Referer: https://www.onsen.ag/",
-            "-i",
-            program.raw["contents"][0]["streaming_url"],
-            "-vcodec",
-            "copy",
-            "-acodec",
-            "copy",
-            "-bsf:a",
-            "aac_adtstoasc",
-            filename,
-        ]
+        cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
+        cmd += ["-headers", "Referer: https://www.onsen.ag/"]
+        cmd += ["-i", program.raw["contents"][0]["streaming_url"]]
+        cmd += ["-vcodec", "copy", "-acodec", "copy"]
+        cmd += ["-bsf:a", "aac_adtstoasc"]
+        cmd += [filename]
         subprocess.run(cmd)

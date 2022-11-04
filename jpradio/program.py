@@ -28,7 +28,7 @@ class Program:
     duration: Optional[int] = None  # unit: minutes
     is_movie: bool = False
     image_url: Optional[str] = None
-    meta: Optional[Dict[str, Any]] = None
+    raw: Optional[Dict[str, Any]] = None
 
     def get_tag(self) -> Dict[str, Any]:
         ret = {
@@ -91,5 +91,5 @@ class Program:
             "duration": self.duration,
             "is_movie": self.is_movie,
             "image_url": self.image_url,
-            "meta": self.meta,
+            "raw": self.raw,
         }

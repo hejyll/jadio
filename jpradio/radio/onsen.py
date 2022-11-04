@@ -1,3 +1,4 @@
+import copy
 import json
 import subprocess
 import time
@@ -82,6 +83,8 @@ class Onsen(Radio):
             if len(raw_program["related_links"]) > 0:
                 info = raw_program["related_links"][0]["link_url"]
             for content in raw_program["contents"]:
+                raw = copy.deepcopy(raw_program)
+                raw["contents"] = [content]
                 delivery_date = to_datetime(content["delivery_date"])
                 program = Program(
                     radio=self.name,
@@ -103,7 +106,7 @@ class Onsen(Radio):
                     is_movie=content["movie"],
                     image_url=content.get("poster_image_url")
                     or raw_program["image"]["url"],
-                    meta={"streaming_url": content["streaming_url"]},
+                    raw=raw,
                 )
                 ret.append(program)
         return ret
@@ -116,7 +119,7 @@ class Onsen(Radio):
             "-headers",
             "Referer: https://www.onsen.ag/",
             "-i",
-            program.meta["streaming_url"],
+            program.raw["contents"][0]["streaming_url"],
             "-vcodec",
             "copy",
             "-acodec",

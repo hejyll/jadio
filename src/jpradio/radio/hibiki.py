@@ -6,25 +6,23 @@ from urllib.parse import urljoin
 import requests
 
 from ..program import Program
-from ..util import get_webdriver, to_datetime
+from ..util import to_datetime
 from .base import Radio
 
 
-def _get_api_v1(href: str) -> Dict[str, Any]:
-    headers = {"X-Requested-With": "XMLHttpRequest"}
-    url = urljoin("https://vcms-api.hibiki-radio.jp/api/v1/", href)
-    response = requests.get(url, headers=headers)
-    return json.loads(response.text)
-
-
 class Hibiki(Radio):
-    def __init__(
-        self, mail: Optional[str] = None, password: Optional[str] = None
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._mail = mail
-        self._password = password
-        self._driver = get_webdriver()
+        self._session = requests.session()
+
+    def _get(self, href: str) -> Dict[str, Any]:
+        url = urljoin("https://vcms-api.hibiki-radio.jp/api/v1/", href)
+        response = self._session.get(url, headers={"X-Requested-With": "XMLHttpRequest"})
+        response.raise_for_status()
+        return json.loads(response.text)
+
+    def close(self) -> None:
+        self._session.close()
 
     @property
     def url(self) -> str:
@@ -44,7 +42,7 @@ class Hibiki(Radio):
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []
-        for raw_program in _get_api_v1("programs"):
+        for raw_program in self._get("programs"):
             if filters and not raw_program["access_id"].lower() in filters:
                 continue
             if (
@@ -53,7 +51,7 @@ class Hibiki(Radio):
                 or "id" not in raw_program["episode"]["video"]
             ):
                 continue
-            detail = _get_api_v1(f"programs/{raw_program['access_id']}")
+            detail = self._get(f"programs/{raw_program['access_id']}")
             performers = [p["name"] for p in detail["casts"]]
             program = Program(
                 radio=self.name,
@@ -81,7 +79,7 @@ class Hibiki(Radio):
 
     def download_media(self, program: Program, filename: str) -> None:
         video_id = program.raw["episode"]["video"]["id"]
-        video = _get_api_v1(f"videos/play_check?video_id={video_id}")
+        video = self._get(f"videos/play_check?video_id={video_id}")
         cmd = [
             "ffmpeg",
             "-y",  # overwrite

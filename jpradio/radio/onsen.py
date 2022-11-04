@@ -92,7 +92,6 @@ class Onsen(Radio):
                     station_id=self.name,
                     station_url=self.url,
                     performers=performers,
-                    performers_sort=raw_program["performers"][0]["id"],
                     desc=raw_program["delivery_interval"],
                     info=info,
                     copyright=raw_program["copyright"],

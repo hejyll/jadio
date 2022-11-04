@@ -21,7 +21,6 @@ class Program:
     station_id: Union[int, str]
     station_url: str
     performers: List[str]
-    performers_sort: str
     desc: str
     info: str
     copyright: str
@@ -85,7 +84,6 @@ class Program:
             "station_id": self.station_id,
             "station_url": self.station_url,
             "performers": self.performers,
-            "performers_sort": self.performers_sort,
             "desc": self.desc,
             "info": self.info,
             "copyright": self.copyright,

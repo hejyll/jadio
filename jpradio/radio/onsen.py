@@ -114,6 +114,7 @@ class Onsen(Radio):
     def download_media(self, program: Program, filename: str) -> None:
         cmd = [
             "ffmpeg",
+            "-y",  # overwrite
             "-loglevel",
             "quiet",
             "-headers",

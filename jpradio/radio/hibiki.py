@@ -84,6 +84,7 @@ class Hibiki(Radio):
         video = _get_api_v1(f"videos/play_check?video_id={video_id}")
         cmd = [
             "ffmpeg",
+            "-y",  # overwrite
             "-loglevel",
             "quiet",
             "-i",

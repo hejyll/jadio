@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import re
 import subprocess
 from functools import lru_cache
@@ -9,8 +10,9 @@ from xml.etree import ElementTree
 import requests
 
 from ..program import Program
+from ..station import Station
 from ..util import convert_html_to_text, get_content, get_emails_from_text, to_datetime
-from .base import Radio
+from .base import Platform
 
 
 def _get_partialkey(offset: int, length: int) -> bytes:
@@ -96,7 +98,7 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     }
 
 
-class Radiko(Radio):
+class Radiko(Platform):
     def __init__(
         self,
         mail: Optional[str] = None,
@@ -114,20 +116,20 @@ class Radiko(Radio):
         self._area_info = None
 
     @property
-    def url(self) -> str:
-        return "https://radiko.jp/"
-
-    @property
-    def name(self) -> str:
+    def id(self) -> str:
         return "radiko.jp"
 
     @property
-    def name_en(self) -> str:
+    def name(self) -> str:
+        return "ラジコ"
+
+    @property
+    def ascii_name(self) -> str:
         return "radiko"
 
     @property
-    def name_jp(self) -> str:
-        return "ラジコ"
+    def url(self) -> str:
+        return "https://radiko.jp/"
 
     def _get(self, href: str, content_type: str, **kwargs) -> Any:
         url = f"https://radiko.jp/{href}"
@@ -195,6 +197,24 @@ class Radiko(Radio):
     def _get_station_region_full(self) -> Dict[str, str]:
         return _parse_stations_tree(self._get("v3/station/region/full.xml", "tree"))
 
+    @lru_cache(maxsize=1)
+    def get_stations(self) -> List[Station]:
+        ret = []
+        for raw_station in self._get_station_region_full():
+            image_url = None
+            if len(raw_station["logos"]) > 0:
+                image_url = raw_station["logos"][0]["href"]
+            station = Station(
+                id=raw_station["id"],
+                platform_id=self.id,
+                name=raw_station["name"],
+                ascii_name=raw_station["ascii_name"],
+                url=raw_station["href"],
+                image_url=image_url,
+            )
+            ret.append(station)
+        return ret
+
     @lru_cache(maxsize=256)
     def _get_program_station_weekly(self, station_id: str) -> Dict[str, str]:
         try:
@@ -207,46 +227,47 @@ class Radiko(Radio):
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []
-        for station in self._get_station_region_full():
-            if filters and station["id"] not in filters:
+        for station in self.get_stations():
+            if filters and station.id not in filters:
                 continue
-            raw_programs = self._get_program_station_weekly(station["id"])
+            raw_programs = self._get_program_station_weekly(station.id)
             if not raw_programs:
                 continue
             raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1
             for raw_program in raw_programs["progs"]:
                 ft = to_datetime(raw_program["attr"]["ft"])
-                raw = {
+
+                # collect raw data
+                raw_data = {
                     "attr": raw_programs["attr"],
                     "name": raw_programs["name"],
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
+
+                # get ascii_name
                 emails = get_emails_from_text(raw_program["desc"])
                 if not emails:
                     emails = get_emails_from_text(raw_program["info"])
-                program_sort = emails[0].split("@")[0] if len(emails) > 1 else None
+                ascii_name = emails[0].split("@")[0] if len(emails) > 1 else None
+
                 program = Program(
-                    radio=self.name,
-                    title=ft.strftime("%Y/%m/%d %H:%M"),
-                    program_name=raw_program["title"],
-                    program_sort=program_sort,
-                    program_id=raw_program["attr"]["id"],
-                    program_url=raw_program["url"],
-                    program_number=raw_program["attr"]["id"],
-                    station_name=station["name"],
-                    station_sort=station["ascii_name"],
-                    station_id=station["id"],
-                    station_url=station["href"],
-                    performers=[raw_program["pfm"]],
+                    id=raw_program["attr"]["id"],
+                    station_id=station.id,
+                    name=raw_program["title"],
+                    url=raw_program["url"],
                     description=convert_html_to_text(raw_program["desc"]),
                     information=convert_html_to_text(raw_program["info"]),
+                    performers=[raw_program["pfm"]],
                     copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
+                    episode_id=raw_program["attr"]["id"],
+                    episode_name=ft.strftime("%Y/%m/%d %H:%M"),
                     datetime=ft,
-                    duration=raw_program["attr"]["dur"] // 60,  # seconds to minutes
-                    is_movie=False,
+                    duration=raw_program["attr"]["dur"],
+                    ascii_name=ascii_name,
                     image_url=raw_program["img"],
-                    raw=raw,
+                    is_video=False,
+                    raw_data=raw_data,
                 )
                 ret.append(program)
         return ret
@@ -258,7 +279,7 @@ class Radiko(Radio):
             return x.strftime("%Y%m%d%H%M%S")
 
         ft = program.datetime
-        to = ft + datetime.timedelta(minutes=program.duration)
+        to = ft + datetime.timedelta(seconds=program.duration)
         ft, to = to_timestamp(ft), to_timestamp(to)
 
         playlist = self._get(
@@ -275,6 +296,6 @@ class Radiko(Radio):
         cmd += ["-vn", "-acodec", "copy"]
         cmd += ["-bsf:a", "aac_adtstoasc"]
         cmd += ["-timeout", str(120)]
-        cmd += ["-t", str(program.duration * 60)]  # minutes to seconds
+        cmd += ["-t", str(program.duration)]
         cmd += [filename]
         subprocess.run(cmd)

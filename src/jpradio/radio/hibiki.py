@@ -6,11 +6,12 @@ from urllib.parse import urljoin
 import requests
 
 from ..program import Program
+from ..station import Station
 from ..util import check_dict_deep, to_datetime
-from .base import Radio
+from .base import Platform
 
 
-class Hibiki(Radio):
+class Hibiki(Platform):
     def __init__(self) -> None:
         super().__init__()
         self._session = requests.session()
@@ -27,20 +28,31 @@ class Hibiki(Radio):
         self._session.close()
 
     @property
-    def url(self) -> str:
-        return "https://hibiki-radio.jp/"
-
-    @property
-    def name(self) -> str:
+    def id(self) -> str:
         return "hibiki-radio.jp"
 
     @property
-    def name_en(self) -> str:
+    def name(self) -> str:
+        return "響 - HiBiKi Radio Station -"
+
+    @property
+    def ascii_name(self) -> str:
         return "HiBiKi Radio Station"
 
     @property
-    def name_jp(self) -> str:
-        return "響 - HiBiKi Radio Station -"
+    def url(self) -> str:
+        return "https://hibiki-radio.jp/"
+
+    def get_stations(self) -> List[Station]:
+        ret = Station(
+            id=self.id,
+            platform_id=self.id,
+            name=self.name,
+            ascii_name=self.ascii_name,
+            url=self.url,
+            image_url="https://hibiki-cast.jp/wp-content/themes/hibiki/assets/images/common/logo_hibiki.png",
+        )
+        return [ret]
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []
@@ -49,34 +61,30 @@ class Hibiki(Radio):
                 continue
             if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
-            detail = self._get(f"programs/{raw_program['access_id']}")
-            performers = [p["name"] for p in detail["casts"]]
+            performers = raw_program["cast"].split(", ")
             program = Program(
-                radio=self.name,
-                title=detail["episode"]["name"],
-                program_name=detail["name"],
-                program_sort=detail["access_id"],
-                program_id=detail["id"],
-                program_url=detail["share_url"],
-                program_number=detail["episode"]["id"],
-                station_name=self.name_jp,
-                station_sort=self.name_en,
-                station_id=self.name,
-                station_url=self.url,
+                id=raw_program["id"],
+                station_id=self.id,
+                name=raw_program["name"],
+                url=raw_program["share_url"],
+                description=raw_program["description"],
+                information=raw_program["onair_information"],
                 performers=performers,
-                description=detail["description"],
-                information=detail["onair_information"],
-                copyright=detail["copyright"],
-                datetime=to_datetime(detail["episode"]["updated_at"]),
-                is_movie=False,
-                image_url=detail["pc_image_url"],
-                raw=detail,
+                copyright=raw_program["copyright"],
+                episode_id=raw_program["episode"]["id"],
+                episode_name=raw_program["episode"]["name"],
+                datetime=to_datetime(raw_program["episode"]["updated_at"]),
+                duration=raw_program["episode"]["video"]["duration"],
+                ascii_name=raw_program["access_id"],
+                image_url=raw_program["pc_image_url"],
+                is_video=raw_program["episode"]["media_type"] != 1,
+                raw_data=raw_program,
             )
             ret.append(program)
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:
-        video_id = program.raw["episode"]["video"]["id"]
+        video_id = program.raw_data["episode"]["video"]["id"]
         video = self._get(f"videos/play_check?video_id={video_id}")
         cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
         cmd += ["-i", video["playlist_url"]]

@@ -69,7 +69,7 @@ def test_get_programs_with_filters():
         target_id = raw["directory_name"]
         programs = radio.get_programs(filters=[target_id])
         for program in programs:
-            assert program.program_sort == target_id
+            assert program.ascii_name == target_id
 
 
 def test_download():

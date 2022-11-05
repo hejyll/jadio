@@ -13,13 +13,6 @@ def test_login_without_user_info():
 def test_api_get_programs():
     with Hibiki() as radio:
         raw_program = radio._get("programs")[0]
-        assert "access_id" in raw_program
-
-
-def test_api_get_programs_detail():
-    with Hibiki() as radio:
-        raw_program = radio._get("programs")[0]
-        detail = radio._get(f"programs/{raw_program['access_id']}")
         need_keys = [
             "id",
             "name",
@@ -29,18 +22,19 @@ def test_api_get_programs_detail():
             "email",
             "copyright",
             "share_url",
+            "cast",
             "episode",
             ["episode", "id"],
             ["episode", "name"],
             ["episode", "video", "id"],
+            ["episode", "video", "duration"],
             ["episode", "updated_at"],
-            "casts",
         ]
         for key in need_keys:
             if isinstance(key, list):
-                assert check_dict_deep(detail, key)
+                assert check_dict_deep(raw_program, key)
             else:
-                assert key in detail
+                assert key in raw_program
 
 
 def test_get_programs():

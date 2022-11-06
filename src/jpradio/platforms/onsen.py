@@ -20,18 +20,22 @@ class Onsen(Platform):
         self._password = password
         self._driver = get_webdriver()
 
+    @classmethod
     @property
     def id(self) -> str:
         return "onsen.ag"
 
+    @classmethod
     @property
     def name(self) -> str:
         return "インターネットラジオステーション＜音泉＞"
 
+    @classmethod
     @property
     def ascii_name(self) -> str:
         return "Internet Radio Station <Onsen>"
 
+    @classmethod
     @property
     def url(self) -> str:
         return "https://www.onsen.ag/"
@@ -121,3 +125,7 @@ class Onsen(Platform):
         cmd += ["-bsf:a", "aac_adtstoasc"]
         cmd += [filename]
         subprocess.run(cmd)
+
+    def get_default_filename(self, program: Program) -> str:
+        dt = program.datetime.strftime("%Y%m%d%H%M")
+        return f"{program.ascii_name}_{dt}.mp4"

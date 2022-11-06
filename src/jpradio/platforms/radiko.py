@@ -115,18 +115,22 @@ class Radiko(Platform):
         self._authtoken = None
         self._area_info = None
 
+    @classmethod
     @property
     def id(self) -> str:
         return "radiko.jp"
 
+    @classmethod
     @property
     def name(self) -> str:
         return "ラジコ"
 
+    @classmethod
     @property
     def ascii_name(self) -> str:
         return "radiko"
 
+    @classmethod
     @property
     def url(self) -> str:
         return "https://radiko.jp/"
@@ -299,3 +303,7 @@ class Radiko(Platform):
         cmd += ["-t", str(program.duration)]
         cmd += [filename]
         subprocess.run(cmd)
+
+    def get_default_filename(self, program: Program) -> str:
+        dt = program.datetime.strftime("%Y%m%d%H%M")
+        return f"{program.station_id}_{dt}.mp4"

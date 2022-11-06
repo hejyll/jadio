@@ -9,18 +9,22 @@ from ..util import get_image
 
 
 class Platform(abc.ABC):
+    @abc.abstractclassmethod
     @abc.abstractproperty
     def id(self) -> str:
         ...
 
+    @abc.abstractclassmethod
     @abc.abstractproperty
     def name(self) -> str:
         ...
 
+    @abc.abstractclassmethod
     @abc.abstractproperty
     def ascii_name(self) -> str:
         ...
 
+    @abc.abstractclassmethod
     @abc.abstractproperty
     def url(self) -> str:
         ...
@@ -97,4 +101,8 @@ class Platform(abc.ABC):
 
     @abc.abstractmethod
     def download_media(self, program: Program, filename: str) -> None:
+        ...
+
+    @abc.abstractmethod
+    def get_default_filename(self, program: Program) -> str:
         ...

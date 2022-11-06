@@ -27,18 +27,22 @@ class Hibiki(Platform):
     def close(self) -> None:
         self._session.close()
 
+    @classmethod
     @property
     def id(self) -> str:
         return "hibiki-radio.jp"
 
+    @classmethod
     @property
     def name(self) -> str:
         return "響 - HiBiKi Radio Station -"
 
+    @classmethod
     @property
     def ascii_name(self) -> str:
         return "HiBiKi Radio Station"
 
+    @classmethod
     @property
     def url(self) -> str:
         return "https://hibiki-radio.jp/"
@@ -92,3 +96,7 @@ class Hibiki(Platform):
         cmd += ["-bsf:a", "aac_adtstoasc"]
         cmd += [filename]
         subprocess.run(cmd)
+
+    def get_default_filename(self, program: Program) -> str:
+        dt = program.datetime.strftime("%Y%m%d%H%M")
+        return f"{program.ascii_name}_{dt}.mp4"

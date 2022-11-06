@@ -1,4 +1,5 @@
 import dataclasses
+import copy
 from typing import Any, Dict, Optional
 
 
@@ -11,9 +12,15 @@ class Station:
     url: Optional[str] = None
     image_url: Optional[str] = None
 
+    def __new__(cls, *args, **kwargs):
+        dataclasses.dataclass(cls)
+        return super().__new__(cls)
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Station":
-        return cls(**data)
+        args = copy.deepcopy(data)
+        args.pop("_id", None)  # remove mongodb id
+        return cls(**args)
 
     def to_dict(self) -> Dict[str, Any]:
         return {

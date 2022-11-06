@@ -24,9 +24,14 @@ class Program:
     is_video: bool = False
     raw_data: Optional[Dict[str, Any]] = None
 
+    def __new__(cls, *args, **kwargs):
+        dataclasses.dataclass(cls)
+        return super().__new__(cls)
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Program":
         args = copy.deepcopy(data)
+        args.pop("_id", None)  # remove mongodb id
         dt = args["datetime"]
         if isinstance(dt, str):
             args["datetime"] = datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M")

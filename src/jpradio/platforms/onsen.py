@@ -92,6 +92,8 @@ class Onsen(Platform):
             if len(raw_program["related_links"]) > 0:
                 description = raw_program["related_links"][0]["link_url"]
             for content in raw_program["contents"]:
+                if not content.get("streaming_url", None):
+                    continue
                 raw_data = copy.deepcopy(raw_program)
                 raw_data["contents"] = [content]
                 delivery_date = to_datetime(content["delivery_date"])

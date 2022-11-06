@@ -176,7 +176,7 @@ def get_config_path() -> str:
     return os.path.join(os.path.expanduser("~"), ".config", "jpradio", "config.json")
 
 
-def load_config(path: Optional[str] = None) -> str:
+def load_config(path: Optional[str] = None) -> Dict[str, str]:
     path = path or get_config_path()
     with open(path, "r") as fh:
         return json.load(fh)

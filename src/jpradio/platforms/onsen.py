@@ -129,5 +129,4 @@ class Onsen(Platform):
         subprocess.run(cmd)
 
     def get_default_filename(self, program: Program) -> str:
-        dt = program.datetime.strftime("%Y%m%d%H%M")
-        return f"{program.ascii_name}_{dt}.mp4"
+        return f"{program.ascii_name}_{program.episode_id}.mp4"

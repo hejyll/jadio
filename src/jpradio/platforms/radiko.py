@@ -156,6 +156,7 @@ class Radiko(Platform):
                 "json",
                 data={"mail": self._mail, "pass": self._password},
             )
+            logger.info(f"Logged in to {self.id} as {self._mail}")
 
         common_headers = {
             "X-Radiko-App": "pc_html5",

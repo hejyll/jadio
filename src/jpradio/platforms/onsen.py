@@ -58,6 +58,7 @@ class Onsen(Platform):
         ).send_keys(self._password)
         self._driver.find_element_by_xpath("/".join([login_xpath, "button"])).click()
         time.sleep(1)
+        logger.info(f"Logged in to {self.id} as {self._mail}")
 
     def close(self) -> None:
         if self._driver:

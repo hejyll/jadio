@@ -14,6 +14,27 @@ from .base import Platform
 logger = logging.getLogger(__name__)
 
 
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+    return Program(
+        id=raw_data["id"],
+        station_id=station_id,
+        name=raw_data["name"],
+        url=raw_data["share_url"],
+        description=raw_data["description"],
+        information=raw_data["onair_information"],
+        performers=raw_data["cast"].split(", "),
+        copyright=raw_data["copyright"],
+        episode_id=raw_data["episode"]["id"],
+        episode_name=raw_data["episode"]["name"],
+        datetime=to_datetime(raw_data["episode"]["updated_at"]),
+        duration=raw_data["episode"]["video"]["duration"],
+        ascii_name=raw_data["access_id"],
+        image_url=raw_data["pc_image_url"],
+        is_video=raw_data["episode"]["media_type"] != 1,
+        raw_data=raw_data,
+    )
+
+
 class Hibiki(Platform):
     def __init__(self) -> None:
         super().__init__()
@@ -68,26 +89,7 @@ class Hibiki(Platform):
                 continue
             if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
-            performers = raw_program["cast"].split(", ")
-            program = Program(
-                id=raw_program["id"],
-                station_id=self.id,
-                name=raw_program["name"],
-                url=raw_program["share_url"],
-                description=raw_program["description"],
-                information=raw_program["onair_information"],
-                performers=performers,
-                copyright=raw_program["copyright"],
-                episode_id=raw_program["episode"]["id"],
-                episode_name=raw_program["episode"]["name"],
-                datetime=to_datetime(raw_program["episode"]["updated_at"]),
-                duration=raw_program["episode"]["video"]["duration"],
-                ascii_name=raw_program["access_id"],
-                image_url=raw_program["pc_image_url"],
-                is_video=raw_program["episode"]["media_type"] != 1,
-                raw_data=raw_program,
-            )
-            ret.append(program)
+            ret.append(_convert_raw_data_to_program(raw_program, self.id))
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 

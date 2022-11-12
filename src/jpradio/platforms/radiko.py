@@ -100,6 +100,32 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     }
 
 
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+    raw_prog = raw_data["progs"][0]
+    emails = get_emails_from_text(raw_prog["desc"])
+    if not emails:
+        emails = get_emails_from_text(raw_prog["info"])
+    ft = to_datetime(raw_prog["attr"]["ft"])
+    return Program(
+        id=raw_prog["attr"]["id"],
+        station_id=station_id,
+        name=raw_prog["title"],
+        url=raw_prog["url"],
+        description=convert_html_to_text(raw_prog["desc"]),
+        information=convert_html_to_text(raw_prog["info"]),
+        performers=[raw_prog["pfm"]],
+        copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
+        episode_id=raw_prog["attr"]["id"],
+        episode_name=ft.strftime("%Y/%m/%d %H:%M"),
+        datetime=ft,
+        duration=raw_prog["attr"]["dur"],
+        ascii_name=emails[0].split("@")[0] if len(emails) > 1 else None,
+        image_url=raw_prog["img"],
+        is_video=False,
+        raw_data=raw_data,
+    )
+
+
 class Radiko(Platform):
     def __init__(
         self,
@@ -242,41 +268,13 @@ class Radiko(Platform):
                 continue
             raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1
             for raw_program in raw_programs["progs"]:
-                ft = to_datetime(raw_program["attr"]["ft"])
-
-                # collect raw data
                 raw_data = {
                     "attr": raw_programs["attr"],
                     "name": raw_programs["name"],
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
-
-                # get ascii_name
-                emails = get_emails_from_text(raw_program["desc"])
-                if not emails:
-                    emails = get_emails_from_text(raw_program["info"])
-                ascii_name = emails[0].split("@")[0] if len(emails) > 1 else None
-
-                program = Program(
-                    id=raw_program["attr"]["id"],
-                    station_id=station.id,
-                    name=raw_program["title"],
-                    url=raw_program["url"],
-                    description=convert_html_to_text(raw_program["desc"]),
-                    information=convert_html_to_text(raw_program["info"]),
-                    performers=[raw_program["pfm"]],
-                    copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
-                    episode_id=raw_program["attr"]["id"],
-                    episode_name=ft.strftime("%Y/%m/%d %H:%M"),
-                    datetime=ft,
-                    duration=raw_program["attr"]["dur"],
-                    ascii_name=ascii_name,
-                    image_url=raw_program["img"],
-                    is_video=False,
-                    raw_data=raw_data,
-                )
-                ret.append(program)
+                ret.append(_convert_raw_data_to_program(raw_data, station.id))
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 

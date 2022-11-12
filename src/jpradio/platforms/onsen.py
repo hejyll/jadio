@@ -14,6 +14,31 @@ from .base import Platform
 logger = logging.getLogger(__name__)
 
 
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+    content = raw_data["contents"][0]
+    description = None
+    if len(raw_data["related_links"]) > 0:
+        description = raw_data["related_links"][0]["link_url"]
+    return Program(
+        id=raw_data["id"],
+        station_id=station_id,
+        name=raw_data["title"],
+        url=f"https://www.onsen.ag/program/{raw_data['directory_name']}",
+        description=description,
+        information=raw_data["delivery_interval"],
+        performers=[performer["name"] for performer in raw_data["performers"]],
+        copyright=raw_data["copyright"],
+        episode_id=content["id"],
+        episode_name=content["title"],
+        datetime=to_datetime(content["delivery_date"]),
+        ascii_name=raw_data["directory_name"],
+        guests=[guest["name"] for guest in raw_data["guests"]],
+        image_url=content.get("poster_image_url", raw_data["image"]["url"]),
+        is_video=content["movie"],
+        raw_data=raw_data,
+    )
+
+
 class Onsen(Platform):
     def __init__(
         self, mail: Optional[str] = None, password: Optional[str] = None
@@ -88,39 +113,12 @@ class Onsen(Platform):
         for raw_program in information["state"]["programs"]["programs"]["all"]:
             if filters and not raw_program["directory_name"] in filters:
                 continue
-            program_url = (
-                f"https://www.onsen.ag/program/{raw_program['directory_name']}"
-            )
-            performers = [p["name"] for p in raw_program["performers"]]
-            description = None
-            if len(raw_program["related_links"]) > 0:
-                description = raw_program["related_links"][0]["link_url"]
             for content in raw_program["contents"]:
                 if not content.get("streaming_url", None):
                     continue
                 raw_data = copy.deepcopy(raw_program)
                 raw_data["contents"] = [content]
-                delivery_date = to_datetime(content["delivery_date"])
-                program = Program(
-                    id=raw_program["id"],
-                    station_id=self.id,
-                    name=raw_program["title"],
-                    url=program_url,
-                    description=description,
-                    information=raw_program["delivery_interval"],
-                    performers=performers,
-                    copyright=raw_program["copyright"],
-                    episode_id=content["id"],
-                    episode_name=content["title"],
-                    datetime=delivery_date,
-                    ascii_name=raw_program["directory_name"],
-                    guests=[g["name"] for g in raw_program["guests"]],
-                    image_url=content.get("poster_image_url")
-                    or raw_program["image"]["url"],
-                    is_video=content["movie"],
-                    raw_data=raw_data,
-                )
-                ret.append(program)
+                ret.append(_convert_raw_data_to_program(raw_data, self.id))
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 

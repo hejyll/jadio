@@ -1,6 +1,6 @@
 import base64
 import datetime
-import json
+import logging
 import re
 import subprocess
 from functools import lru_cache
@@ -13,6 +13,8 @@ from ..program import Program
 from ..station import Station
 from ..util import convert_html_to_text, get_content, get_emails_from_text, to_datetime
 from .base import Platform
+
+logger = logging.getLogger(__name__)
 
 
 def _get_partialkey(offset: int, length: int) -> bytes:
@@ -274,6 +276,7 @@ class Radiko(Platform):
                     raw_data=raw_data,
                 )
                 ret.append(program)
+        logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

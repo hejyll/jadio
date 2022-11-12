@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import subprocess
 import time
 from functools import lru_cache
@@ -9,6 +10,8 @@ from ..program import Program
 from ..station import Station
 from ..util import get_webdriver, to_datetime
 from .base import Platform
+
+logger = logging.getLogger(__name__)
 
 
 class Onsen(Platform):
@@ -117,6 +120,7 @@ class Onsen(Platform):
                     raw_data=raw_data,
                 )
                 ret.append(program)
+        logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

@@ -1,4 +1,5 @@
 import json
+import logging
 import subprocess
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -9,6 +10,8 @@ from ..program import Program
 from ..station import Station
 from ..util import check_dict_deep, to_datetime
 from .base import Platform
+
+logger = logging.getLogger(__name__)
 
 
 class Hibiki(Platform):
@@ -85,6 +88,7 @@ class Hibiki(Platform):
                 raw_data=raw_program,
             )
             ret.append(program)
+        logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

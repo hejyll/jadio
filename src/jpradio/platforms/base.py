@@ -62,6 +62,7 @@ class Platform(abc.ABC):
         ...
 
     def _get_mp4_tag(self, station: Station, program: Program) -> Dict[str, Any]:
+        day = program.datetime.strftime("%Y-%m-%dT%H%M%SZ") if program.datetime else None
         ret = {
             # artist
             "\xa9ART": station.name,
@@ -72,7 +73,7 @@ class Platform(abc.ABC):
             # performers
             "\xa9con": ", ".join(program.performers),
             # year
-            "\xa9day": program.datetime.strftime("%Y-%m-%dT%H%M%SZ"),
+            "\xa9day": day,
             # description
             "desc": program.description,
             # comment

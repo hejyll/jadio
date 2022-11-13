@@ -308,4 +308,4 @@ class Radiko(Platform):
 
     def get_default_filename(self, program: Program) -> str:
         dt = program.datetime.strftime("%Y%m%d%H%M")
-        return f"{program.station_id}_{dt}.mp4"
+        return f"{program.station_id}_{dt}.m4a"

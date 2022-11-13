@@ -141,4 +141,5 @@ class Onsen(Platform):
         subprocess.run(cmd)
 
     def get_default_filename(self, program: Program) -> str:
-        return f"{program.ascii_name}_{program.episode_id}.mp4"
+        ext = "mp4" if program.is_video else "m4a"
+        return f"{program.ascii_name}_{program.episode_id}.{ext}"

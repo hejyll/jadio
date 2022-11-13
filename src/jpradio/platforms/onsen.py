@@ -23,7 +23,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
     # https://onsen-ma3phlsvod.sslcs.cdngc.net/onsen-ma3pvod/_definst_/<yyyymm>/*.mp4/playlist.m3u
     year = content["streaming_url"].split("/")[-3][:4]
     delivery_date = None
-    if year.isdigit() and content['delivery_date']:
+    if year.isdigit() and content["delivery_date"]:
         delivery_date = to_datetime(f"{year}/{content['delivery_date']}")
     return Program(
         id=raw_data["id"],

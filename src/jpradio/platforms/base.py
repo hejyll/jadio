@@ -1,12 +1,10 @@
 import abc
 import logging
-from typing import Any, Dict, List, Optional
-
-from mutagen import mp4
+from typing import List, Optional
 
 from ..program import Program
 from ..station import Station
-from ..util import get_image
+from ..tag import get_mp4_tag, set_mp4_tag
 
 logger = logging.getLogger(__name__)
 
@@ -61,50 +59,6 @@ class Platform(abc.ABC):
     ) -> List[Program]:
         ...
 
-    def _get_mp4_tag(self, station: Station, program: Program) -> Dict[str, Any]:
-        day = program.datetime.strftime("%Y-%m-%dT%H%M%SZ") if program.datetime else None
-        ret = {
-            # artist
-            "\xa9ART": station.name,
-            # album
-            "\xa9alb": program.name,
-            # title
-            "\xa9nam": program.episode_name,
-            # performers
-            "\xa9con": ", ".join(program.performers),
-            # year
-            "\xa9day": day,
-            # description
-            "desc": program.description,
-            # comment
-            "\xa9cmt": program.information,
-            # genre
-            "\xa9gen": "Radio",
-            # url
-            "\xa9url": program.url,
-            # copyright
-            "cprt": program.copyright,
-            # sort artist
-            "soar": station.ascii_name,
-            # sort album
-            "soal": program.ascii_name,
-            # episode id
-            "tven": str(program.episode_id),
-        }
-        if program.image_url:
-            covr = get_image(program.image_url)
-            if covr:
-                ret["covr"] = [covr]
-        return ret
-
-    def set_mp4_tag(self, program: Program, filename: str) -> None:
-        station = self.get_station_from_program(program)
-        media = mp4.MP4(filename)
-        for key, value in self._get_mp4_tag(station, program).items():
-            if value is not None:
-                media[key] = value
-        media.save()
-
     def download(self, program: Program, filename: Optional[str] = None) -> str:
         filename = filename or self.get_default_filename(program)
         logger.info(
@@ -112,7 +66,8 @@ class Platform(abc.ABC):
             f" to {filename}"
         )
         self.download_media(program, filename)
-        self.set_mp4_tag(program, filename)
+        station = self.get_station_from_program(program)
+        set_mp4_tag(filename, get_mp4_tag(station, program))
         return filename
 
     @abc.abstractmethod

@@ -105,13 +105,15 @@ class Platform(abc.ABC):
                 media[key] = value
         media.save()
 
-    def download(self, program: Program, filename: str) -> None:
+    def download(self, program: Program, filename: Optional[str] = None) -> str:
+        filename = filename or self.get_default_filename(program)
         logger.info(
             f'Download {program.station_id} / "{program.name}" / "{program.episode_name}"'
             f" to {filename}"
         )
         self.download_media(program, filename)
         self.set_mp4_tag(program, filename)
+        return filename
 
     @abc.abstractmethod
     def download_media(self, program: Program, filename: str) -> None:

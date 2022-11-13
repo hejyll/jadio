@@ -19,6 +19,12 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
     description = None
     if len(raw_data["related_links"]) > 0:
         description = raw_data["related_links"][0]["link_url"]
+    # streaming_url:
+    # https://onsen-ma3phlsvod.sslcs.cdngc.net/onsen-ma3pvod/_definst_/<yyyymm>/*.mp4/playlist.m3u
+    year = content["streaming_url"].split("/")[-3][:4]
+    delivery_date = None
+    if year.isdigit() and content['delivery_date']:
+        delivery_date = to_datetime(f"{year}/{content['delivery_date']}")
     return Program(
         id=raw_data["id"],
         station_id=station_id,
@@ -30,9 +36,12 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
         copyright=raw_data["copyright"],
         episode_id=content["id"],
         episode_name=content["title"],
-        datetime=to_datetime(content["delivery_date"]),
+        datetime=delivery_date,
         ascii_name=raw_data["directory_name"],
-        guests=[guest["name"] for guest in raw_data["guests"]],
+        guests=[
+            guest["name"] if isinstance(guest, dict) else guest
+            for guest in content["guests"]
+        ],
         image_url=content.get("poster_image_url", raw_data["image"]["url"]),
         is_video=content["movie"],
         raw_data=raw_data,

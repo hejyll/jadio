@@ -1,8 +1,13 @@
-from datetime import datetime
+import datetime
 from typing import List
 
-from jpradio.program import Program
-from jpradio.search import ProgramQuery, ProgramQueryList, search_programs
+from jpradio import (
+    Program,
+    ProgramQuery,
+    ProgramQueryList,
+    is_downloadable,
+    search_programs,
+)
 
 _programs = [
     Program(
@@ -16,7 +21,7 @@ _programs = [
         "",
         0,
         "2022/11/27 01:00",
-        datetime(2022, 11, 27, 1, 0),
+        datetime.datetime(2022, 11, 27, 1, 0),
         7200,
     ),
     Program(
@@ -30,7 +35,7 @@ _programs = [
         "",
         0,
         "2022/11/28 01:00",
-        datetime(2022, 11, 28, 1, 0),
+        datetime.datetime(2022, 11, 28, 1, 0),
         7200,
     ),
     Program(
@@ -44,7 +49,7 @@ _programs = [
         "",
         0,
         "2022/11/29 01:00",
-        datetime(2022, 11, 29, 1, 0),
+        datetime.datetime(2022, 11, 29, 1, 0),
         7200,
     ),
     Program(
@@ -58,7 +63,7 @@ _programs = [
         "",
         100,
         "2022/11/28 01:00",
-        datetime(2022, 11, 30, 0, 0),
+        datetime.datetime(2022, 11, 30, 0, 0),
         ascii_name="anime",
         is_video=True,
     ),
@@ -139,7 +144,7 @@ def test_gte_match():
 
 
 def test_ne_match():
-    query = ProgramQuery(datetime={"$ne": datetime(2022, 11, 28, 1, 0)})
+    query = ProgramQuery(datetime={"$ne": datetime.datetime(2022, 11, 28, 1, 0)})
     res = search_programs(_programs, query, downloadable=False)
     _checker(res, [0, 2, 3])
 
@@ -154,3 +159,17 @@ def test_nin_match():
     query = ProgramQuery(performers={"$nin": "tanaka"})
     res = search_programs(_programs, query, downloadable=False)
     _checker(res, [0, 2])
+
+
+def test_is_downloadable_true():
+    program = Program.from_dict(_programs[0].to_dict())
+    program.datetime = datetime.datetime.now()
+    program.datetime -= datetime.timedelta(days=1)
+    assert is_downloadable(program)
+
+
+def test_is_downloadable_false():
+    program = Program.from_dict(_programs[0].to_dict())
+    program.datetime = datetime.datetime.now()
+    program.datetime += datetime.timedelta(seconds=program.duration + 10)
+    assert not is_downloadable(program)

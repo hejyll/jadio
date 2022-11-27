@@ -7,16 +7,6 @@ from xml.etree import ElementTree
 
 import html2text
 import requests
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-
-
-def get_webdriver() -> webdriver.Chrome:
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    return webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
 
 def extract_numbers(x: str) -> Optional[int]:

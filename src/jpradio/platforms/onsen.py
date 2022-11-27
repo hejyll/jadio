@@ -6,12 +6,23 @@ import time
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+
 from ..program import Program
 from ..station import Station
-from ..util import get_webdriver, to_datetime
+from ..util import to_datetime
 from .base import Platform
 
 logger = logging.getLogger(__name__)
+
+
+def _get_webdriver() -> webdriver.Chrome:
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    return webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
 
 def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
@@ -55,7 +66,7 @@ class Onsen(Platform):
         super().__init__()
         self._mail = mail
         self._password = password
-        self._driver = get_webdriver()
+        self._driver = _get_webdriver()
 
     @classmethod
     @property

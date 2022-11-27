@@ -1,4 +1,12 @@
-# Japanese Radio Downloader
+# Jpradio: Japanese Radio Downloader
+
+Jpradio is a package for downloading programs from Japanese web radio platforms.
+
+## Installation
+
+```console
+$ pip install git+https://github.com/hejyll/jpradio-recorder
+```
 
 ## Usage
 

@@ -58,26 +58,3 @@ class Program:
             "is_video": self.is_video,
             "raw_data": self.raw_data,
         }
-
-
-def is_downloadable(program: Program) -> bool:
-    if not program.datetime:
-        return False
-    target_dt = program.datetime
-    if program.duration:
-        target_dt += datetime.timedelta(seconds=program.duration)
-    return datetime.datetime.now() > target_dt
-
-
-def search_programs(
-    programs: List[Program], query: Dict[str, str], downloadable: bool = True
-) -> List[Program]:
-    if downloadable:
-        programs = filter(lambda program: is_downloadable(program), programs)
-    programs = filter(
-        lambda program: all(
-            getattr(program, key) == value for key, value in query.items()
-        ),
-        programs,
-    )
-    return list(programs)

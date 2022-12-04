@@ -12,7 +12,7 @@ def _get_all_platforms_cls() -> List[Platform]:
     return [Radiko, Onsen, Hibiki]
 
 
-class Jpradio(Platform):
+class Jadio(Platform):
     def __init__(self, configs: Dict[str, Any]) -> None:
         super().__init__()
         all_platform_cls = _get_all_platforms_cls()

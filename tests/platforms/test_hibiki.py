@@ -1,8 +1,8 @@
 import os
 import tempfile
 
-from jpradio import Hibiki
-from jpradio.util import check_dict_deep
+from jadio import Hibiki
+from jadio.util import check_dict_deep
 
 
 def test_login_without_user_info():

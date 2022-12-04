@@ -163,7 +163,7 @@ def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
 
 
 def get_config_path() -> str:
-    return os.path.join(os.path.expanduser("~"), ".config", "jpradio", "config.json")
+    return os.path.join(os.path.expanduser("~"), ".config", "jadio", "config.json")
 
 
 def load_config(path: Optional[str] = None) -> Dict[str, str]:

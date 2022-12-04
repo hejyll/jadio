@@ -1,7 +1,7 @@
 import datetime
 from typing import List
 
-from jpradio import (
+from jadio import (
     Program,
     ProgramQuery,
     ProgramQueryList,

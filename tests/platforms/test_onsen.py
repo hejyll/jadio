@@ -1,8 +1,8 @@
 import os
 import tempfile
 
-from jpradio import Onsen
-from jpradio.util import check_dict_deep, get_login_info_from_config
+from jadio import Onsen
+from jadio.util import check_dict_deep, get_login_info_from_config
 
 
 def test_login_without_user_info():

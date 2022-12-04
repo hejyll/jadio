@@ -4,8 +4,8 @@ import tempfile
 import pytest
 import requests
 
-from jpradio import Radiko
-from jpradio.util import get_login_info_from_config
+from jadio import Radiko
+from jadio.util import get_login_info_from_config
 
 
 def test_login_without_user_info():

@@ -1,12 +1,14 @@
 import abc
 import logging
-from typing import List, Optional
+from typing import List, Optional, Type, TypeVar
 
 from ..program import Program
 from ..station import Station
 from ..tag import get_mp4_tag, set_mp4_tag
 
 logger = logging.getLogger(__name__)
+
+PlatformType = TypeVar("PlatformType", bound="Platform")
 
 
 class Platform(abc.ABC):
@@ -30,7 +32,7 @@ class Platform(abc.ABC):
     def url(self) -> str:
         ...
 
-    def __enter__(self) -> "Platform":
+    def __enter__(self: Type[PlatformType]) -> PlatformType:
         self.login()
         return self
 

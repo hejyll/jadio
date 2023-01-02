@@ -13,6 +13,7 @@ $ pip install git+https://github.com/hejyll/jadio
 ```python
 """sample.py"""
 import logging
+
 import jadio
 
 logging.basicConfig(

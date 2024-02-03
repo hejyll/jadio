@@ -62,27 +62,31 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     for station in tree.findall(".//station"):
         progs = []
         for prog in station.findall(".//prog"):
-            attr_key = ["id", "master_id", "ft", "to", "ftl", "tol", "dur"]
-            data_key = [
-                "title",
-                "url",
-                "failed_record",
-                "ts_in_ng",
-                "ts_out_ng",
-                "desc",
-                "info",
-                "pfm",
-                "img",
-                "metas",
-            ]
-            data = {
-                "attr": {
-                    k: None if prog.get(k) == "" else int(prog.get(k)) for k in attr_key
+            try:
+                attr_key = ["id", "master_id", "ft", "to", "ftl", "tol", "dur"]
+                data_key = [
+                    "title",
+                    "url",
+                    "failed_record",
+                    "ts_in_ng",
+                    "ts_out_ng",
+                    "desc",
+                    "info",
+                    "pfm",
+                    "img",
+                    "metas",
+                ]
+                data = {
+                    "attr": {
+                        k: None if prog.get(k) == "" else int(prog.get(k))
+                        for k in attr_key
+                    }
                 }
-            }
-            for key in data_key:
-                data[key] = prog.findtext(".//{}".format(key))
-            progs.append(data)
+                for key in data_key:
+                    data[key] = prog.findtext(".//{}".format(key))
+                progs.append(data)
+            except ValueError:
+                continue
         stations.append(
             {
                 "attr": {

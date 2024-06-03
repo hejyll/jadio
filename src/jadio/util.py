@@ -140,12 +140,6 @@ def get_image(url: str) -> Optional[bytes]:
     return get_content(response, content_type="byte")
 
 
-def convert_html_to_text(x: str) -> str:
-    if not x:
-        return x
-    return html2text.html2text(x)
-
-
 def get_emails_from_text(x: str) -> List[str]:
     return re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", x)
 

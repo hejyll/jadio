@@ -11,7 +11,7 @@ import requests
 
 from ..program import Program
 from ..station import Station
-from ..util import convert_html_to_text, get_content, get_emails_from_text, to_datetime
+from ..util import get_content, get_emails_from_text, to_datetime
 from .base import Platform
 
 logger = logging.getLogger(__name__)
@@ -115,8 +115,8 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
         station_id=station_id,
         name=raw_prog["title"],
         url=raw_prog["url"],
-        description=convert_html_to_text(raw_prog["desc"]),
-        information=convert_html_to_text(raw_prog["info"]),
+        description=raw_prog["desc"],
+        information=raw_prog["info"],
         performers=[raw_prog["pfm"]],
         copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
         episode_id=raw_prog["attr"]["id"],

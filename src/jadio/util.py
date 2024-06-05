@@ -5,7 +5,6 @@ import re
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
-import html2text
 import requests
 
 

@@ -73,15 +73,18 @@ class Hibiki(Platform):
         return "https://hibiki-radio.jp/"
 
     def get_stations(self) -> List[Station]:
-        ret = Station(
-            id=self.id,
-            platform_id=self.id,
-            name=self.name,
-            ascii_name=self.ascii_name,
-            url=self.url,
-            image_url="https://hibiki-cast.jp/wp-content/themes/hibiki/assets/images/common/logo_hibiki.png",
-        )
-        return [ret]
+        ret = []
+        for raw_program in self._get("programs"):
+            station = Station(
+                id=raw_program["access_id"],
+                platform_id=self.id,
+                name=raw_program["name"],
+                ascii_name=raw_program["access_id"],
+                url=raw_program["share_url"],
+                image_url=raw_program["pc_image_url"],
+            )
+            ret.append(station)
+        return ret
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []

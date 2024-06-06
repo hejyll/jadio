@@ -112,15 +112,19 @@ class Onsen(Platform):
             self._driver = None
 
     def get_stations(self) -> List[Station]:
-        ret = Station(
-            id=self.id,
-            platform_id=self.id,
-            name=self.name,
-            ascii_name=self.ascii_name,
-            url=self.url,
-            image_url="https://www.onsen.ag/_nuxt/img/76b80ac.png",
-        )
-        return [ret]
+        information = self._get_information()
+        ret = []
+        for raw_program in information["state"]["programs"]["programs"]["all"]:
+            station = Station(
+                id=raw_program["directory_name"],
+                platform_id=self.id,
+                name=raw_program["title"],
+                ascii_name=raw_program["directory_name"],
+                url=f"https://www.onsen.ag/program/{raw_program['directory_name']}",
+                image_url=raw_program["image"]["url"],
+            )
+            ret.append(station)
+        return ret
 
     @lru_cache(maxsize=1)
     def _get_information(self) -> Dict[str, Any]:

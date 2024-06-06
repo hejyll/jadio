@@ -14,10 +14,11 @@ from .base import Platform
 logger = logging.getLogger(__name__)
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
     return Program(
         id=raw_data["id"],
-        station_id=station_id,
+        station_id=raw_data["access_id"],
+        platform_id=platform_id,
         name=raw_data["name"],
         url=raw_data["share_url"],
         description=raw_data["description"],

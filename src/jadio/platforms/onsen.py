@@ -25,7 +25,7 @@ def _get_webdriver() -> webdriver.Chrome:
     return webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
     content = raw_data["contents"][0]
     description = None
     if len(raw_data["related_links"]) > 0:
@@ -38,7 +38,8 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
         delivery_date = to_datetime(f"{year}/{content['delivery_date']}")
     return Program(
         id=raw_data["id"],
-        station_id=station_id,
+        station_id=raw_data["directory_name"],
+        platform_id=platform_id,
         name=raw_data["title"],
         url=f"https://www.onsen.ag/program/{raw_data['directory_name']}",
         description=description,

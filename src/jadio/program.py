@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import dataclasses
 import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from serdescontainer import BaseContainer
 
@@ -12,8 +12,9 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 
 @dataclasses.dataclass
 class Program(BaseContainer):
-    id: int
+    id: Union[int, str]
     station_id: str
+    platform_id: str
     name: str
     url: str
     description: str

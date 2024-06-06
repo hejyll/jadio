@@ -104,7 +104,9 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     }
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+def _convert_raw_data_to_program(
+    raw_data: Dict[str, Any], station_id: str, platform_id: str
+) -> Program:
     raw_prog = raw_data["progs"][0]
     emails = get_emails_from_text(raw_prog["desc"])
     if not emails:
@@ -113,6 +115,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
     return Program(
         id=raw_prog["attr"]["id"],
         station_id=station_id,
+        platform_id=platform_id,
         name=raw_prog["title"],
         url=raw_prog["url"],
         description=raw_prog["desc"],
@@ -278,7 +281,7 @@ class Radiko(Platform):
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
-                ret.append(_convert_raw_data_to_program(raw_data, station.id))
+                ret.append(_convert_raw_data_to_program(raw_data, station.id, self.id))
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 

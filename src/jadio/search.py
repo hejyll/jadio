@@ -23,6 +23,7 @@ __all__ = [
 
 @dataclasses.dataclass
 class ProgramQuery(BaseContainer):
+    platform_id: Condition[str] = None
     station_id: Condition[str] = None
     program_id: Condition[int] = None
     program_name: Condition[str] = None

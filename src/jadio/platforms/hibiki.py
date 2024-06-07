@@ -31,7 +31,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> 
         duration=raw_data["episode"]["video"]["duration"],
         ascii_name=raw_data["access_id"],
         image_url=raw_data["pc_image_url"],
-        is_video=raw_data["episode"]["media_type"] != 1,
+        is_video=raw_data["episode"]["media_type"] not in [1, None],
         raw_data=raw_data,
     )
 

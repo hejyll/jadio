@@ -7,6 +7,8 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 from ..program import Program
@@ -19,10 +21,11 @@ logger = logging.getLogger(__name__)
 
 def _get_webdriver() -> webdriver.Chrome:
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
-    return webdriver.Chrome(ChromeDriverManager().install(), options=options)
+    service = Service(executable_path=ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=options)
 
 
 def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
@@ -96,13 +99,13 @@ class Onsen(Platform):
         login_xpath = (
             '//*[@id="__layout"]/div/div[1]/div/div/div[4]/div/div[1]/dl[1]/dd'
         )
-        self._driver.find_element_by_xpath(
-            "/".join([login_xpath, "div[1]/input"])
+        self._driver.find_element(
+            By.XPATH, "/".join([login_xpath, "div[1]/input"])
         ).send_keys(self._mail)
-        self._driver.find_element_by_xpath(
-            "/".join([login_xpath, "div[2]/input"])
+        self._driver.find_element(
+            By.XPATH, "/".join([login_xpath, "div[2]/input"])
         ).send_keys(self._password)
-        self._driver.find_element_by_xpath("/".join([login_xpath, "button"])).click()
+        self._driver.find_element(By.XPATH, "/".join([login_xpath, "button"])).click()
         time.sleep(1)
         logger.info(f"Logged in to {self.id} as {self._mail}")
 

@@ -14,10 +14,11 @@ from .base import Platform
 logger = logging.getLogger(__name__)
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> Program:
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
     return Program(
         id=raw_data["id"],
-        station_id=station_id,
+        station_id=raw_data["access_id"],
+        platform_id=platform_id,
         name=raw_data["name"],
         url=raw_data["share_url"],
         description=raw_data["description"],
@@ -30,7 +31,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], station_id: str) -> P
         duration=raw_data["episode"]["video"]["duration"],
         ascii_name=raw_data["access_id"],
         image_url=raw_data["pc_image_url"],
-        is_video=raw_data["episode"]["media_type"] != 1,
+        is_video=raw_data["episode"]["media_type"] not in [1, None],
         raw_data=raw_data,
     )
 
@@ -72,15 +73,18 @@ class Hibiki(Platform):
         return "https://hibiki-radio.jp/"
 
     def get_stations(self) -> List[Station]:
-        ret = Station(
-            id=self.id,
-            platform_id=self.id,
-            name=self.name,
-            ascii_name=self.ascii_name,
-            url=self.url,
-            image_url="https://hibiki-cast.jp/wp-content/themes/hibiki/assets/images/common/logo_hibiki.png",
-        )
-        return [ret]
+        ret = []
+        for raw_program in self._get("programs"):
+            station = Station(
+                id=raw_program["access_id"],
+                platform_id=self.id,
+                name=raw_program["name"],
+                ascii_name=raw_program["access_id"],
+                url=raw_program["share_url"],
+                image_url=raw_program["pc_image_url"],
+            )
+            ret.append(station)
+        return ret
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []

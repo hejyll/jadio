@@ -32,10 +32,22 @@ class Program(BaseContainer):
     raw_data: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Program:
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        datetime_format: str = DATETIME_FORMAT,
+        **kwargs,
+    ) -> Program:
         args = copy.deepcopy(data)
         args.pop("_id", None)  # remove mongodb id
-        return super().from_dict(args, datetime_format=DATETIME_FORMAT)
+        return super().from_dict(args, datetime_format=datetime_format, **kwargs)
 
-    def to_dict(self, serialize: bool = False) -> Dict[str, Any]:
-        return super().to_dict(serialize=serialize, datetime_format=DATETIME_FORMAT)
+    def to_dict(
+        self,
+        serialize: bool = False,
+        datetime_format: str = DATETIME_FORMAT,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        return super().to_dict(
+            serialize=serialize, datetime_format=datetime_format, **kwargs
+        )

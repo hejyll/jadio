@@ -1,17 +1,12 @@
-from __future__ import annotations
-
-import copy
-import dataclasses
 import datetime
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from serdescontainer import BaseContainer
-
-DATETIME_FORMAT = "%Y-%m-%d %H:%M"
+from dataclasses_json import DataClassJsonMixin
 
 
-@dataclasses.dataclass
-class Program(BaseContainer):
+@dataclass
+class Program(DataClassJsonMixin):
     id: Union[int, str]
     station_id: str
     platform_id: str
@@ -30,24 +25,3 @@ class Program(BaseContainer):
     image_url: Optional[str] = None
     is_video: bool = False
     raw_data: Optional[Dict[str, Any]] = None
-
-    @classmethod
-    def from_dict(
-        cls,
-        data: Dict[str, Any],
-        datetime_format: str = DATETIME_FORMAT,
-        **kwargs,
-    ) -> Program:
-        args = copy.deepcopy(data)
-        args.pop("_id", None)  # remove mongodb id
-        return super().from_dict(args, datetime_format=datetime_format, **kwargs)
-
-    def to_dict(
-        self,
-        serialize: bool = False,
-        datetime_format: str = DATETIME_FORMAT,
-        **kwargs,
-    ) -> Dict[str, Any]:
-        return super().to_dict(
-            serialize=serialize, datetime_format=datetime_format, **kwargs
-        )

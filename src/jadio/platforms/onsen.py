@@ -28,11 +28,25 @@ def _get_webdriver() -> webdriver.Chrome:
     return webdriver.Chrome(service=service, options=options)
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
+def _get_description_from_program_web_site(
+    directory_name: str, driver: webdriver.Chrome
+) -> str:
+    driver.get(f"https://www.onsen.ag/program/{directory_name}")
+    xpath = '//*[@id="__layout"]/div/div[1]/article/div[1]/div/div/div/div[2]/div[2]/div/span'
+    try:
+        return driver.find_element(By.XPATH, xpath).text
+    except:
+        return ""
+
+
+def _convert_raw_data_to_program(
+    raw_data: Dict[str, Any],
+    platform_id: str,
+    driver: webdriver.Chrome,
+) -> Program:
     content = raw_data["contents"][0]
-    description = None
-    if len(raw_data["related_links"]) > 0:
-        description = raw_data["related_links"][0]["link_url"]
+    directory_name = raw_data["directory_name"]
+    description = _get_description_from_program_web_site(directory_name, driver)
     # streaming_url:
     # https://onsen-ma3phlsvod.sslcs.cdngc.net/onsen-ma3pvod/_definst_/<yyyymm>/*.mp4/playlist.m3u
     year = content["streaming_url"].split("/")[-3][:4]
@@ -41,10 +55,10 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> 
         delivery_date = to_datetime(f"{year}/{content['delivery_date']}")
     return Program(
         id=raw_data["id"],
-        station_id=raw_data["directory_name"],
+        station_id=directory_name,
         platform_id=platform_id,
         name=raw_data["title"],
-        url=f"https://www.onsen.ag/program/{raw_data['directory_name']}",
+        url=f"https://www.onsen.ag/program/{directory_name}",
         description=description,
         information=raw_data["delivery_interval"],
         performers=[performer["name"] for performer in raw_data["performers"]],
@@ -52,7 +66,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> 
         episode_id=content["id"],
         episode_name=content["title"],
         datetime=delivery_date,
-        ascii_name=raw_data["directory_name"],
+        ascii_name=directory_name,
         guests=[
             guest["name"] if isinstance(guest, dict) else guest
             for guest in content["guests"]
@@ -146,7 +160,10 @@ class Onsen(Platform):
                     continue
                 raw_data = copy.deepcopy(raw_program)
                 raw_data["contents"] = [content]
-                ret.append(_convert_raw_data_to_program(raw_data, self.id))
+                ret.append(
+                    _convert_raw_data_to_program(raw_data, self.id, self._driver)
+                )
+                print(ret[-1])
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 

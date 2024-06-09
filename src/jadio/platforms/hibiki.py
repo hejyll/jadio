@@ -14,23 +14,23 @@ from .base import Platform
 logger = logging.getLogger(__name__)
 
 
-def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> Program:
     return Program(
-        id=raw_data["id"],
-        station_id=raw_data["access_id"],
-        platform_id=platform_id,
-        name=raw_data["name"],
-        url=raw_data["share_url"],
+        service_id=service_id,
+        station_id=None,
+        program_id=raw_data["access_id"],
+        episode_id=raw_data["episode"]["id"],
+        pub_date=to_datetime(raw_data["episode_updated_at"]),
+        duration=raw_data["episode"]["video"]["duration"],
+        program_title=raw_data["name"],
+        episode_title=raw_data["episode"]["name"],
         description=raw_data["description"],
         information=raw_data["onair_information"],
-        performers=raw_data["cast"].split(", "),
         copyright=raw_data["copyright"],
-        episode_id=raw_data["episode"]["id"],
-        episode_name=raw_data["episode"]["name"],
-        datetime=to_datetime(raw_data["episode"]["updated_at"]),
-        duration=raw_data["episode"]["video"]["duration"],
-        ascii_name=raw_data["access_id"],
+        link_url=raw_data["share_url"],
         image_url=raw_data["pc_image_url"],
+        performers=raw_data["cast"].split(", "),
+        guests=None,
         is_video=raw_data["episode"]["media_type"] not in [1, None],
         raw_data=raw_data,
     )
@@ -109,4 +109,4 @@ class Hibiki(Platform):
 
     def get_default_filename(self, program: Program) -> str:
         ext = "mp4" if program.is_video else "m4a"
-        return f"{program.ascii_name}_{program.episode_id}.{ext}"
+        return f"{program.program_id}_{program.episode_id}.{ext}"

@@ -12,7 +12,6 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 from ..program import Program
-from ..station import Station
 from ..util import to_datetime
 from .base import Platform
 
@@ -126,21 +125,6 @@ class Onsen(Platform):
         if self._driver:
             self._driver.quit()
             self._driver = None
-
-    def get_stations(self) -> List[Station]:
-        information = self._get_information()
-        ret = []
-        for raw_program in information["state"]["programs"]["programs"]["all"]:
-            station = Station(
-                id=raw_program["directory_name"],
-                platform_id=self.id,
-                name=raw_program["title"],
-                ascii_name=raw_program["directory_name"],
-                url=f"https://www.onsen.ag/program/{raw_program['directory_name']}",
-                image_url=raw_program["image"]["url"],
-            )
-            ret.append(station)
-        return ret
 
     @lru_cache(maxsize=1)
     def _get_information(self) -> Dict[str, Any]:

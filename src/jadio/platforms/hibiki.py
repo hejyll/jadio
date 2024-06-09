@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 import requests
 
 from ..program import Program
-from ..station import Station
 from ..util import check_dict_deep, to_datetime
 from .base import Platform
 
@@ -71,20 +70,6 @@ class Hibiki(Platform):
     @property
     def url(self) -> str:
         return "https://hibiki-radio.jp/"
-
-    def get_stations(self) -> List[Station]:
-        ret = []
-        for raw_program in self._get("programs"):
-            station = Station(
-                id=raw_program["access_id"],
-                platform_id=self.id,
-                name=raw_program["name"],
-                ascii_name=raw_program["access_id"],
-                url=raw_program["share_url"],
-                image_url=raw_program["pc_image_url"],
-            )
-            ret.append(station)
-        return ret
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
         ret = []

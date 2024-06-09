@@ -41,8 +41,8 @@ class Platform(abc.ABC):
     def close(self) -> None:
         return None
 
-    @abc.abstractmethod
-    def get_stations(self) -> List[Station]: ...
+    def get_stations(self) -> List[Station]:
+        return []
 
     def get_station_from_program(self, program: Program) -> Station:
         ret = list(filter(lambda x: x.id == program.station_id, self.get_stations()))

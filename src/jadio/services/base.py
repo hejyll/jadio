@@ -8,13 +8,13 @@ from ..tag import get_mp4_tag, set_mp4_tag
 
 logger = logging.getLogger(__name__)
 
-PlatformType = TypeVar("PlatformType", bound="Platform")
+ServiceType = TypeVar("ServiceType", bound="Service")
 
 
-class Platform(abc.ABC):
+class Service(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def id(cls) -> str: ...
+    def service_id(cls) -> str: ...
 
     @classmethod
     @abc.abstractmethod
@@ -22,9 +22,9 @@ class Platform(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def url(cls) -> str: ...
+    def link_url(cls) -> str: ...
 
-    def __enter__(self: Type[PlatformType]) -> PlatformType:
+    def __enter__(self: Type[ServiceType]) -> ServiceType:
         self.login()
         return self
 
@@ -41,9 +41,13 @@ class Platform(abc.ABC):
         return []
 
     def get_station_from_program(self, program: Program) -> Station:
+        if not program.station_id:
+            raise RuntimeError(f"{self.service_id()} has no multiple stations.")
         ret = list(filter(lambda x: x.id == program.station_id, self.get_stations()))
         if len(ret) == 0:
-            raise ValueError(f"{program.station_id} is not found on {self.id()}")
+            raise ValueError(
+                f"{program.station_id} is not found on {self.service_id()}"
+            )
         return ret[0]
 
     @abc.abstractmethod

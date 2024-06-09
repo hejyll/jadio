@@ -7,13 +7,13 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 from ..program import Program
 from ..util import to_datetime
-from .base import Platform
+from .base import Service
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def _get_webdriver() -> webdriver.Chrome:
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
-    service = Service(executable_path=ChromeDriverManager().install())
+    service = ChromeService(executable_path=ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
 
@@ -75,7 +75,7 @@ def _convert_raw_data_to_program(
     )
 
 
-class Onsen(Platform):
+class Onsen(Service):
     def __init__(
         self, mail: Optional[str] = None, password: Optional[str] = None
     ) -> None:
@@ -85,7 +85,7 @@ class Onsen(Platform):
         self._driver = _get_webdriver()
 
     @classmethod
-    def id(cls) -> str:
+    def service_id(cls) -> str:
         return "onsen.ag"
 
     @classmethod
@@ -93,7 +93,7 @@ class Onsen(Platform):
         return "インターネットラジオステーション＜音泉＞"
 
     @classmethod
-    def url(cls) -> str:
+    def link_url(cls) -> str:
         return "https://www.onsen.ag/"
 
     def login(self) -> None:
@@ -111,7 +111,7 @@ class Onsen(Platform):
         ).send_keys(self._password)
         self._driver.find_element(By.XPATH, "/".join([login_xpath, "button"])).click()
         time.sleep(1)
-        logger.info(f"Logged in to {self.id()} as {self._mail}")
+        logger.info(f"Logged in to {self.service_id()} as {self._mail}")
 
     def close(self) -> None:
         if self._driver:
@@ -136,9 +136,11 @@ class Onsen(Platform):
                 raw_data = copy.deepcopy(raw_program)
                 raw_data["contents"] = [content]
                 ret.append(
-                    _convert_raw_data_to_program(raw_data, self.id(), self._driver)
+                    _convert_raw_data_to_program(
+                        raw_data, self.service_id(), self._driver
+                    )
                 )
-        logger.info(f"Get {len(ret)} program(s) from {self.id()}")
+        logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

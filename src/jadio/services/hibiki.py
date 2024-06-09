@@ -8,7 +8,7 @@ import requests
 
 from ..program import Program
 from ..util import check_dict_deep, to_datetime
-from .base import Platform
+from .base import Service
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> P
     )
 
 
-class Hibiki(Platform):
+class Hibiki(Service):
     def __init__(self) -> None:
         super().__init__()
         self._session = requests.session()
@@ -52,7 +52,7 @@ class Hibiki(Platform):
         self._session.close()
 
     @classmethod
-    def id(cls) -> str:
+    def service_id(cls) -> str:
         return "hibiki-radio.jp"
 
     @classmethod
@@ -60,7 +60,7 @@ class Hibiki(Platform):
         return "響 - HiBiKi Radio Station -"
 
     @classmethod
-    def url(cls) -> str:
+    def link_url(cls) -> str:
         return "https://hibiki-radio.jp/"
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
@@ -70,8 +70,8 @@ class Hibiki(Platform):
                 continue
             if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
-            ret.append(_convert_raw_data_to_program(raw_program, self.id()))
-        logger.info(f"Get {len(ret)} program(s) from {self.id()}")
+            ret.append(_convert_raw_data_to_program(raw_program, self.service_id()))
+        logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

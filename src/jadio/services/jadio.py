@@ -1,0 +1,56 @@
+from typing import Any, Dict, List, Optional
+
+from ..program import Program
+from ..station import Station
+from .base import Service
+from .hibiki import Hibiki
+from .onsen import Onsen
+from .radiko import Radiko
+
+
+def _get_all_service_cls() -> List[Service]:
+    return [Radiko, Onsen, Hibiki]
+
+
+class Jadio(Service):
+    def __init__(self, configs: Dict[str, Any]) -> None:
+        super().__init__()
+        all_service_cls = _get_all_service_cls()
+        self._services = {
+            cls.service_id(): cls(**configs.get(cls.service_id(), {}))
+            for cls in all_service_cls
+        }
+
+    def service_id(self, program: Program) -> str:
+        return self.get_service(program).service_id()
+
+    def name(self, program: Program) -> str:
+        return self.get_service(program).name()
+
+    def link_url(self, program: Program) -> str:
+        return self.get_service(program).link_url()
+
+    def login(self) -> None:
+        for service in self._services.values():
+            service.login()
+
+    def close(self) -> None:
+        for service in self._services.values():
+            service.close()
+
+    def get_service(self, program: Program) -> Service:
+        return self._services[program.service_id]
+
+    def get_stations(self) -> List[Station]:
+        return sum([p.get_stations() for p in self._services.values()], [])
+
+    def get_programs(
+        self, filters: Optional[List[str]] = None, **kwargs
+    ) -> List[Program]:
+        return sum([p.get_programs(filters) for p in self._services.values()], [])
+
+    def download_media(self, program: Program, filename: str) -> None:
+        self.get_service(program).download_media(program, filename)
+
+    def get_default_filename(self, program: Program) -> str:
+        return self.get_service(program).get_default_filename(program)

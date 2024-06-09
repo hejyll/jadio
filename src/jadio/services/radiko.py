@@ -243,7 +243,7 @@ class Radiko(Service):
         return _parse_stations_tree(self._get("v3/station/region/full.xml", "tree"))
 
     @lru_cache(maxsize=1)
-    def get_stations(self) -> List[Station]:
+    def get_stations(self, **kwargs) -> List[Station]:
         ret = []
         for raw_station in self._get_station_region_full():
             image_url = None
@@ -270,11 +270,9 @@ class Radiko(Service):
             return {}
         return _parse_programs_tree(ret)
 
-    def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
+    def get_programs(self, **kwargs) -> List[Program]:
         ret = []
         for station in self.get_stations():
-            if filters and station.id not in filters:
-                continue
             raw_programs = self._get_program_station_weekly(station.id)
             if not raw_programs:
                 continue

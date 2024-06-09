@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..program import Program
 from ..station import Station
@@ -41,13 +41,15 @@ class Jadio(Service):
     def get_service(self, program: Program) -> Service:
         return self._services[program.service_id]
 
-    def get_stations(self) -> List[Station]:
-        return sum([p.get_stations() for p in self._services.values()], [])
+    def get_stations(self, **kwargs) -> List[Station]:
+        return sum(
+            [service.get_stations(**kwargs) for service in self._services.values()], []
+        )
 
-    def get_programs(
-        self, filters: Optional[List[str]] = None, **kwargs
-    ) -> List[Program]:
-        return sum([p.get_programs(filters) for p in self._services.values()], [])
+    def get_programs(self, **kwargs) -> List[Program]:
+        return sum(
+            [service.get_programs(**kwargs) for service in self._services.values()], []
+        )
 
     def download_media(self, program: Program, filename: str) -> None:
         self.get_service(program).download_media(program, filename)

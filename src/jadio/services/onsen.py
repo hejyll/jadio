@@ -124,12 +124,10 @@ class Onsen(Service):
         ret = self._driver.execute_script("return JSON.stringify(window.__NUXT__);")
         return json.loads(ret)
 
-    def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
+    def get_programs(self, **kwargs) -> List[Program]:
         information = self._get_information()
         ret = []
         for raw_program in information["state"]["programs"]["programs"]["all"]:
-            if filters and not raw_program["directory_name"] in filters:
-                continue
             for content in raw_program["contents"]:
                 if not content.get("streaming_url", None):
                     continue

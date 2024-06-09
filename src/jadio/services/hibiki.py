@@ -1,7 +1,7 @@
 import json
 import logging
 import subprocess
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 import requests
@@ -63,11 +63,9 @@ class Hibiki(Service):
     def link_url(cls) -> str:
         return "https://hibiki-radio.jp/"
 
-    def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
+    def get_programs(self, **kwargs) -> List[Program]:
         ret = []
         for raw_program in self._get("programs"):
-            if filters and not raw_program["access_id"].lower() in filters:
-                continue
             if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
             ret.append(_convert_raw_data_to_program(raw_program, self.service_id()))

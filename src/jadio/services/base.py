@@ -37,12 +37,12 @@ class Service(abc.ABC):
     def close(self) -> None:
         return None
 
-    def get_stations(self) -> List[Station]:
+    def get_stations(self, **kwargs) -> List[Station]:
         return []
 
     def get_station_from_program(self, program: Program) -> Station:
         if not program.station_id:
-            raise RuntimeError(f"{self.service_id()} has no multiple stations.")
+            raise RuntimeError(f"{self.service_id()} has no concept of station.")
         ret = list(filter(lambda x: x.id == program.station_id, self.get_stations()))
         if len(ret) == 0:
             raise ValueError(
@@ -51,14 +51,12 @@ class Service(abc.ABC):
         return ret[0]
 
     @abc.abstractmethod
-    def get_programs(
-        self, filters: Optional[List[str]] = None, **kwargs
-    ) -> List[Program]: ...
+    def get_programs(self, **kwargs) -> List[Program]: ...
 
     def download(self, program: Program, filename: Optional[str] = None) -> str:
         filename = filename or self.get_default_filename(program)
         logger.info(
-            f'Download {program.service_id} / "{program.program_title}" / "{program.episode_title}"'
+            f"Download {program.service_id} / {program.program_title} / {program.episode_title}"
             f" to {filename}"
         )
         self.download_media(program, filename)

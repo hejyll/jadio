@@ -244,10 +244,19 @@ class Radiko(Service):
     def _get_station_region_full(self) -> Dict[str, str]:
         return _parse_stations_tree(self._get("v3/station/region/full.xml", "tree"))
 
+    @lru_cache(maxsize=32)
+    def _get_station_list_area(self) -> Dict[str, str]:
+        area_id = self._area_info[0]
+        return _parse_stations_tree(self._get(f"v2/station/list/{area_id}.xml", "tree"))
+
     @lru_cache(maxsize=1)
     def get_stations(self, **kwargs) -> List[Station]:
         ret = []
-        for raw_station in self._get_station_region_full():
+        get_station_fn = self._get_station_list_area
+        if self._user_info:
+            # For premium members, area-free downloading is available.
+            get_station_fn = self._get_station_region_full
+        for raw_station in get_station_fn():
             image_url = None
             if len(raw_station["logos"]) > 0:
                 image_url = raw_station["logos"][0]["href"]

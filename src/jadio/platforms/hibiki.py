@@ -52,23 +52,15 @@ class Hibiki(Platform):
         self._session.close()
 
     @classmethod
-    @property
-    def id(self) -> str:
+    def id(cls) -> str:
         return "hibiki-radio.jp"
 
     @classmethod
-    @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "響 - HiBiKi Radio Station -"
 
     @classmethod
-    @property
-    def ascii_name(self) -> str:
-        return "HiBiKi Radio Station"
-
-    @classmethod
-    @property
-    def url(self) -> str:
+    def url(cls) -> str:
         return "https://hibiki-radio.jp/"
 
     def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
@@ -78,8 +70,8 @@ class Hibiki(Platform):
                 continue
             if not check_dict_deep(raw_program, ["episode", "video", "id"]):
                 continue
-            ret.append(_convert_raw_data_to_program(raw_program, self.id))
-        logger.info(f"Get {len(ret)} program(s) from {self.id}")
+            ret.append(_convert_raw_data_to_program(raw_program, self.id()))
+        logger.info(f"Get {len(ret)} program(s) from {self.id()}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

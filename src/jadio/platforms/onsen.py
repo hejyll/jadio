@@ -85,23 +85,15 @@ class Onsen(Platform):
         self._driver = _get_webdriver()
 
     @classmethod
-    @property
-    def id(self) -> str:
+    def id(cls) -> str:
         return "onsen.ag"
 
     @classmethod
-    @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "インターネットラジオステーション＜音泉＞"
 
     @classmethod
-    @property
-    def ascii_name(self) -> str:
-        return "Internet Radio Station <Onsen>"
-
-    @classmethod
-    @property
-    def url(self) -> str:
+    def url(cls) -> str:
         return "https://www.onsen.ag/"
 
     def login(self) -> None:
@@ -119,7 +111,7 @@ class Onsen(Platform):
         ).send_keys(self._password)
         self._driver.find_element(By.XPATH, "/".join([login_xpath, "button"])).click()
         time.sleep(1)
-        logger.info(f"Logged in to {self.id} as {self._mail}")
+        logger.info(f"Logged in to {self.id()} as {self._mail}")
 
     def close(self) -> None:
         if self._driver:
@@ -144,10 +136,9 @@ class Onsen(Platform):
                 raw_data = copy.deepcopy(raw_program)
                 raw_data["contents"] = [content]
                 ret.append(
-                    _convert_raw_data_to_program(raw_data, self.id, self._driver)
+                    _convert_raw_data_to_program(raw_data, self.id(), self._driver)
                 )
-                print(ret[-1])
-        logger.info(f"Get {len(ret)} program(s) from {self.id}")
+        logger.info(f"Get {len(ret)} program(s) from {self.id()}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

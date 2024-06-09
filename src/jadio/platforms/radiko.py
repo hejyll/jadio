@@ -164,23 +164,15 @@ class Radiko(Platform):
         self._area_info = None
 
     @classmethod
-    @property
-    def id(self) -> str:
+    def id(cls) -> str:
         return "radiko.jp"
 
     @classmethod
-    @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "ラジコ"
 
     @classmethod
-    @property
-    def ascii_name(self) -> str:
-        return "radiko"
-
-    @classmethod
-    @property
-    def url(self) -> str:
+    def url(cls) -> str:
         return "https://radiko.jp/"
 
     def _get(self, href: str, content_type: str, **kwargs) -> Any:
@@ -202,7 +194,7 @@ class Radiko(Platform):
                 "json",
                 data={"mail": self._mail, "pass": self._password},
             )
-            logger.info(f"Logged in to {self.id} as {self._mail}")
+            logger.info(f"Logged in to {self.id()} as {self._mail}")
 
         common_headers = {
             "X-Radiko-App": "pc_html5",
@@ -259,7 +251,7 @@ class Radiko(Platform):
                 image_url = raw_station["logos"][0]["href"]
             station = Station(
                 id=raw_station["id"],
-                platform_id=self.id,
+                platform_id=self.id(),
                 name=raw_station["name"],
                 ascii_name=raw_station["ascii_name"],
                 url=raw_station["href"],
@@ -294,8 +286,8 @@ class Radiko(Platform):
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
-                ret.append(_convert_raw_data_to_program(raw_data, self.id))
-        logger.info(f"Get {len(ret)} program(s) from {self.id}")
+                ret.append(_convert_raw_data_to_program(raw_data, self.id()))
+        logger.info(f"Get {len(ret)} program(s) from {self.id()}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:

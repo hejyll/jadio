@@ -17,20 +17,17 @@ class Jadio(Platform):
         super().__init__()
         all_platform_cls = _get_all_platforms_cls()
         self._platforms = {
-            cls.id: cls(**configs.get(cls.id, {})) for cls in all_platform_cls
+            cls.id(): cls(**configs.get(cls.id(), {})) for cls in all_platform_cls
         }
 
     def id(self, program: Program) -> str:
-        return self.get_platform(program).id
+        return self.get_platform(program).id()
 
     def name(self, program: Program) -> str:
-        return self.get_platform(program).name
-
-    def ascii_name(self, program: Program) -> str:
-        return self.get_platform(program).ascii_name
+        return self.get_platform(program).name()
 
     def url(self, program: Program) -> str:
-        return self.get_platform(program).url
+        return self.get_platform(program).url()
 
     def login(self) -> None:
         for platform in self._platforms.values():

@@ -12,21 +12,17 @@ PlatformType = TypeVar("PlatformType", bound="Platform")
 
 
 class Platform(abc.ABC):
-    @abc.abstractclassmethod
-    @abc.abstractproperty
-    def id(self) -> str: ...
+    @classmethod
+    @abc.abstractmethod
+    def id(cls) -> str: ...
 
-    @abc.abstractclassmethod
-    @abc.abstractproperty
-    def name(self) -> str: ...
+    @classmethod
+    @abc.abstractmethod
+    def name(cls) -> str: ...
 
-    @abc.abstractclassmethod
-    @abc.abstractproperty
-    def ascii_name(self) -> str: ...
-
-    @abc.abstractclassmethod
-    @abc.abstractproperty
-    def url(self) -> str: ...
+    @classmethod
+    @abc.abstractmethod
+    def url(cls) -> str: ...
 
     def __enter__(self: Type[PlatformType]) -> PlatformType:
         self.login()
@@ -47,7 +43,7 @@ class Platform(abc.ABC):
     def get_station_from_program(self, program: Program) -> Station:
         ret = list(filter(lambda x: x.id == program.station_id, self.get_stations()))
         if len(ret) == 0:
-            raise ValueError(f"{program.station_id} is not found on {self.id}")
+            raise ValueError(f"{program.station_id} is not found on {self.id()}")
         return ret[0]
 
     @abc.abstractmethod

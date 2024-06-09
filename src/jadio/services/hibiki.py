@@ -1,7 +1,8 @@
 import json
 import logging
 import subprocess
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Union
 from urllib.parse import urljoin
 
 import requests
@@ -72,16 +73,16 @@ class Hibiki(Service):
         logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
-    def download_media(self, program: Program, filename: str) -> None:
+    def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:
         video_id = program.raw_data["episode"]["video"]["id"]
         video = self._get(f"videos/play_check?video_id={video_id}")
         cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
         cmd += ["-i", video["playlist_url"]]
         cmd += ["-vcodec", "copy", "-acodec", "copy"]
         cmd += ["-bsf:a", "aac_adtstoasc"]
-        cmd += [filename]
+        cmd += [str(file_path)]
         subprocess.run(cmd)
 
-    def get_default_filename(self, program: Program) -> str:
+    def _get_default_file_path(self, program: Program) -> Path:
         ext = "mp4" if program.is_video else "m4a"
-        return f"{program.program_id}_{program.episode_id}.{ext}"
+        return Path(f"{program.program_id}_{program.episode_id}.{ext}")

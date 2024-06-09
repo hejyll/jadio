@@ -1,4 +1,5 @@
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 from ..program import Program
 from ..station import Station
@@ -51,8 +52,8 @@ class Jadio(Service):
             [service.get_programs(**kwargs) for service in self._services.values()], []
         )
 
-    def download_media(self, program: Program, filename: str) -> None:
-        self.get_service_from_program(program).download_media(program, filename)
+    def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:
+        self.get_service_from_program(program)._download_media(program, file_path)
 
-    def get_default_filename(self, program: Program) -> str:
-        return self.get_service_from_program(program).get_default_filename(program)
+    def _get_default_file_path(self, program: Program) -> Path:
+        return self.get_service_from_program(program)._get_default_file_path(program)

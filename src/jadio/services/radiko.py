@@ -4,7 +4,8 @@ import logging
 import re
 import subprocess
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
 import requests
@@ -289,7 +290,7 @@ class Radiko(Service):
         logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
-    def download_media(self, program: Program, filename: str) -> None:
+    def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:
         """Support only time-shift download"""
 
         # check required fields of program
@@ -320,9 +321,9 @@ class Radiko(Service):
         cmd += ["-bsf:a", "aac_adtstoasc"]
         cmd += ["-timeout", str(120)]
         cmd += ["-t", str(program.duration)]
-        cmd += [filename]
+        cmd += [str(file_path)]
         subprocess.run(cmd)
 
-    def get_default_filename(self, program: Program) -> str:
+    def _get_default_file_path(self, program: Program) -> Path:
         dt = program.pub_date.strftime("%Y-%m-%d-%H-%M")
-        return f"{program.program_id}_{dt}.m4a"
+        return Path(f"{program.program_id}_{dt}.m4a")

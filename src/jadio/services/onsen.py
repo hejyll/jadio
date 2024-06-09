@@ -4,7 +4,8 @@ import logging
 import subprocess
 import time
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -141,7 +142,7 @@ class Onsen(Service):
         logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
-    def download_media(self, program: Program, filename: str) -> None:
+    def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:
         # check required fields of program
         required_fields = ["raw_data"]
         for field in required_fields:
@@ -153,9 +154,9 @@ class Onsen(Service):
         cmd += ["-i", program.raw_data["contents"][0]["streaming_url"]]
         cmd += ["-vcodec", "copy", "-acodec", "copy"]
         cmd += ["-bsf:a", "aac_adtstoasc"]
-        cmd += [filename]
+        cmd += [str(file_path)]
         subprocess.run(cmd)
 
-    def get_default_filename(self, program: Program) -> str:
+    def _get_default_file_path(self, program: Program) -> Path:
         ext = "mp4" if program.is_video else "m4a"
-        return f"{program.program_id}_{program.episode_id}.{ext}"
+        return Path(f"{program.program_id}_{program.episode_id}.{ext}")

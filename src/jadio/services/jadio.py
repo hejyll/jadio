@@ -22,13 +22,13 @@ class Jadio(Service):
         }
 
     def service_id(self, program: Program) -> str:
-        return self.get_service(program).service_id()
+        return self.get_service_from_program(program).service_id()
 
     def name(self, program: Program) -> str:
-        return self.get_service(program).name()
+        return self.get_service_from_program(program).name()
 
     def link_url(self, program: Program) -> str:
-        return self.get_service(program).link_url()
+        return self.get_service_from_program(program).link_url()
 
     def login(self) -> None:
         for service in self._services.values():
@@ -38,7 +38,7 @@ class Jadio(Service):
         for service in self._services.values():
             service.close()
 
-    def get_service(self, program: Program) -> Service:
+    def get_service_from_program(self, program: Program) -> Service:
         return self._services[program.service_id]
 
     def get_stations(self, **kwargs) -> List[Station]:
@@ -52,7 +52,7 @@ class Jadio(Service):
         )
 
     def download_media(self, program: Program, filename: str) -> None:
-        self.get_service(program).download_media(program, filename)
+        self.get_service_from_program(program).download_media(program, filename)
 
     def get_default_filename(self, program: Program) -> str:
-        return self.get_service(program).get_default_filename(program)
+        return self.get_service_from_program(program).get_default_filename(program)

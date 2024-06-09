@@ -141,6 +141,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> P
         link_url=raw_prog["url"],
         image_url=raw_prog["img"],
         performers=raw_prog["pfm"],
+        guests=None,
         is_video=False,
         raw_data=raw_data,
     )
@@ -250,11 +251,11 @@ class Radiko(Service):
             if len(raw_station["logos"]) > 0:
                 image_url = raw_station["logos"][0]["href"]
             station = Station(
-                id=raw_station["id"],
-                platform_id=self.service_id(),
+                service_id=self.service_id(),
+                station_id=raw_station["id"],
                 name=raw_station["name"],
-                ascii_name=raw_station["ascii_name"],
-                url=raw_station["href"],
+                description=None,
+                link_url=raw_station["href"],
                 image_url=image_url,
             )
             ret.append(station)
@@ -273,7 +274,7 @@ class Radiko(Service):
     def get_programs(self, **kwargs) -> List[Program]:
         ret = []
         for station in self.get_stations():
-            raw_programs = self._get_program_station_weekly(station.id)
+            raw_programs = self._get_program_station_weekly(station.station_id)
             if not raw_programs:
                 continue
             raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1

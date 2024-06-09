@@ -43,7 +43,9 @@ class Service(abc.ABC):
     def get_station_from_program(self, program: Program) -> Station:
         if not program.station_id:
             raise RuntimeError(f"{self.service_id()} has no concept of station.")
-        ret = list(filter(lambda x: x.id == program.station_id, self.get_stations()))
+        ret = list(
+            filter(lambda x: x.station_id == program.station_id, self.get_stations())
+        )
         if len(ret) == 0:
             raise ValueError(
                 f"{program.station_id} is not found on {self.service_id()}"

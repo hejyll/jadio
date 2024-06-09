@@ -139,10 +139,6 @@ def get_image(url: str) -> Optional[bytes]:
     return get_content(response, content_type="byte")
 
 
-def get_emails_from_text(x: str) -> List[str]:
-    return re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", x)
-
-
 def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
     if len(keys) == 0:
         return True

@@ -28,6 +28,7 @@ def _get_webdriver() -> webdriver.Chrome:
     return webdriver.Chrome(service=service, options=options)
 
 
+@lru_cache(maxsize=1024)
 def _get_description_from_program_web_site(
     directory_name: str, driver: webdriver.Chrome
 ) -> str:
@@ -40,9 +41,7 @@ def _get_description_from_program_web_site(
 
 
 def _convert_raw_data_to_program(
-    raw_data: Dict[str, Any],
-    platform_id: str,
-    driver: webdriver.Chrome,
+    raw_data: Dict[str, Any], service_id: str, driver: webdriver.Chrome
 ) -> Program:
     content = raw_data["contents"][0]
     directory_name = raw_data["directory_name"]
@@ -54,24 +53,24 @@ def _convert_raw_data_to_program(
     if year.isdigit() and content["delivery_date"]:
         delivery_date = to_datetime(f"{year}/{content['delivery_date']}")
     return Program(
-        id=raw_data["id"],
-        station_id=directory_name,
-        platform_id=platform_id,
-        name=raw_data["title"],
-        url=f"https://www.onsen.ag/program/{directory_name}",
+        service_id=service_id,
+        station_id=None,
+        program_id=directory_name,
+        episode_id=content["id"],
+        pub_date=delivery_date,
+        duration=None,
+        program_title=raw_data["title"],
+        episode_title=content["title"],
         description=description,
         information=raw_data["delivery_interval"],
-        performers=[performer["name"] for performer in raw_data["performers"]],
         copyright=raw_data["copyright"],
-        episode_id=content["id"],
-        episode_name=content["title"],
-        datetime=delivery_date,
-        ascii_name=directory_name,
+        link_url=f"https://www.onsen.ag/program/{directory_name}",
+        image_url=content.get("poster_image_url", raw_data["image"]["url"]),
+        performers=[performer["name"] for performer in raw_data["performers"]],
         guests=[
             guest["name"] if isinstance(guest, dict) else guest
             for guest in content["guests"]
         ],
-        image_url=content.get("poster_image_url", raw_data["image"]["url"]),
         is_video=content["movie"],
         raw_data=raw_data,
     )
@@ -168,6 +167,12 @@ class Onsen(Platform):
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:
+        # check required fields of program
+        required_fields = ["raw_data"]
+        for field in required_fields:
+            if getattr(program, field) is None:
+                raise ValueError(f"{field} field is required")
+
         cmd = ["ffmpeg", "-y", "-loglevel", "quiet"]
         cmd += ["-headers", "Referer: https://www.onsen.ag/"]
         cmd += ["-i", program.raw_data["contents"][0]["streaming_url"]]
@@ -178,4 +183,4 @@ class Onsen(Platform):
 
     def get_default_filename(self, program: Program) -> str:
         ext = "mp4" if program.is_video else "m4a"
-        return f"{program.ascii_name}_{program.episode_id}.{ext}"
+        return f"{program.program_id}_{program.episode_id}.{ext}"

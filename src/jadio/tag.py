@@ -3,21 +3,24 @@ from typing import Any, Dict
 from mutagen import mp4
 
 from .program import Program
-from .station import Station
 from .util import get_image
 
 
-def get_mp4_tag(station: Station, program: Program) -> Dict[str, Any]:
-    day = program.datetime.strftime("%Y-%m-%dT%H%M%SZ") if program.datetime else None
+def get_mp4_tag(artist: str, program: Program) -> Dict[str, Any]:
+    pub_date = program.pub_date
+    day = pub_date.strftime("%Y-%m-%dT%H%M%SZ") if pub_date else None
+    performers = program.performers
+    if isinstance(performers, list):
+        performers = ", ".join(performers)
     ret = {
         # artist
-        "\xa9ART": station.name,
+        "\xa9ART": artist,
         # album
-        "\xa9alb": program.name,
+        "\xa9alb": program.program_title,
         # title
-        "\xa9nam": program.episode_name,
+        "\xa9nam": program.episode_title,
         # performers
-        "\xa9con": ", ".join(program.performers),
+        "\xa9con": performers,
         # year
         "\xa9day": day,
         # description
@@ -27,13 +30,9 @@ def get_mp4_tag(station: Station, program: Program) -> Dict[str, Any]:
         # genre
         "\xa9gen": "Radio",
         # url
-        "\xa9url": program.url,
+        "\xa9url": program.link_url,
         # copyright
         "cprt": program.copyright,
-        # sort artist
-        "soar": station.ascii_name,
-        # sort album
-        "soal": program.ascii_name,
         # episode id
         "tven": str(program.episode_id),
     }

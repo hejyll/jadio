@@ -19,10 +19,6 @@ class Jadio(Platform):
         self._platforms = {
             cls.id: cls(**configs.get(cls.id, {})) for cls in all_platform_cls
         }
-        self._station_id_platform_map = {
-            station.id: self._platforms[station.platform_id]
-            for station in self.get_stations()
-        }
 
     def id(self, program: Program) -> str:
         return self.get_platform(program).id
@@ -45,7 +41,7 @@ class Jadio(Platform):
             platform.close()
 
     def get_platform(self, program: Program) -> Platform:
-        return self._station_id_platform_map[program.station_id]
+        return self._platforms[program.service_id]
 
     def get_stations(self) -> List[Station]:
         return sum([p.get_stations() for p in self._platforms.values()], [])

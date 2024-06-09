@@ -58,12 +58,17 @@ class Platform(abc.ABC):
     def download(self, program: Program, filename: Optional[str] = None) -> str:
         filename = filename or self.get_default_filename(program)
         logger.info(
-            f'Download {program.station_id} / "{program.name}" / "{program.episode_name}"'
+            f'Download {program.service_id} / "{program.program_title}" / "{program.episode_title}"'
             f" to {filename}"
         )
         self.download_media(program, filename)
-        station = self.get_station_from_program(program)
-        set_mp4_tag(filename, get_mp4_tag(station, program))
+        # TODO: remove fetching stations
+        if program.station_id:
+            station = self.get_station_from_program(program)
+            artist = station.name
+        else:
+            artist = self.name(program)
+        set_mp4_tag(filename, get_mp4_tag(artist, program))
         return filename
 
     @abc.abstractmethod

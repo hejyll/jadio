@@ -11,10 +11,12 @@ import requests
 
 from ..program import Program
 from ..station import Station
-from ..util import get_content, get_emails_from_text, to_datetime
+from ..util import get_content, to_datetime
 from .base import Platform
 
 logger = logging.getLogger(__name__)
+
+RADIKO_COPYRIGHTS = "Copyright \xa9 radiko co., Ltd. All rights reserved"
 
 
 def _get_partialkey(offset: int, length: int) -> bytes:
@@ -104,30 +106,41 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     }
 
 
-def _convert_raw_data_to_program(
-    raw_data: Dict[str, Any], station_id: str, platform_id: str
-) -> Program:
+def _get_program_id(station_id: str, ft: datetime.datetime) -> str:
+    dow = ft.strftime("%a").lower()
+    time = ft.strftime("%H%M")
+    return f"{station_id.lower()}_{dow}_{time}"
+
+
+def _get_information(ft: datetime.datetime, to: datetime.datetime) -> str:
+    # Japanese radio broadcast stations express a day as 5:00-29:00.
+    dow_ja_table = {0: "月", 1: "火", 2: "水", 3: "木", 4: "金", 5: "土", 6: "日"}
+    dow_ja = dow_ja_table.get((ft - datetime.timedelta(hours=5)).weekday())
+    ft_h, ft_m = ft.hour + (24 if ft.hour < 5 else 0), ft.minute
+    to_h, to_m = to.hour + (24 if to.hour < 5 else 0), to.minute
+    return f"{dow_ja}曜日 {ft_h:02}:{ft_m:02}〜{to_h:02}:{to_m:02}"
+
+
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], platform_id: str) -> Program:
     raw_prog = raw_data["progs"][0]
-    emails = get_emails_from_text(raw_prog["desc"])
-    if not emails:
-        emails = get_emails_from_text(raw_prog["info"])
+    station_id = raw_data["attr"]["id"]
     ft = to_datetime(raw_prog["attr"]["ft"])
+    to = to_datetime(raw_prog["attr"]["to"])
     return Program(
-        id=raw_prog["attr"]["id"],
+        service_id=platform_id,
         station_id=station_id,
-        platform_id=platform_id,
-        name=raw_prog["title"],
-        url=raw_prog["url"],
-        description=raw_prog["desc"],
-        information=raw_prog["info"],
-        performers=[raw_prog["pfm"]],
-        copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
+        program_id=_get_program_id(station_id, ft),
         episode_id=raw_prog["attr"]["id"],
-        episode_name=ft.strftime("%Y/%m/%d %H:%M"),
-        datetime=ft,
+        pub_date=ft,
         duration=raw_prog["attr"]["dur"],
-        ascii_name=emails[0].split("@")[0] if len(emails) > 1 else None,
+        program_title=raw_prog["title"],
+        episode_title=ft.strftime("%Y/%m/%d %H:%M"),
+        description=raw_prog["desc"] + "<br>" + raw_prog["info"],
+        information=_get_information(ft, to),
+        copyright=RADIKO_COPYRIGHTS,
+        link_url=raw_prog["url"],
         image_url=raw_prog["img"],
+        performers=raw_prog["pfm"],
         is_video=False,
         raw_data=raw_data,
     )
@@ -281,17 +294,23 @@ class Radiko(Platform):
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
-                ret.append(_convert_raw_data_to_program(raw_data, station.id, self.id))
+                ret.append(_convert_raw_data_to_program(raw_data, self.id))
         logger.info(f"Get {len(ret)} program(s) from {self.id}")
         return ret
 
     def download_media(self, program: Program, filename: str) -> None:
         """Support only time-shift download"""
 
+        # check required fields of program
+        required_fields = ["station_id", "pub_date", "duration"]
+        for field in required_fields:
+            if getattr(program, field) is None:
+                raise ValueError(f"{field} field is required")
+
         def to_timestamp(x: datetime.datetime) -> str:
             return x.strftime("%Y%m%d%H%M%S")
 
-        ft = program.datetime
+        ft = program.pub_date
         to = ft + datetime.timedelta(seconds=program.duration)
         ft, to = to_timestamp(ft), to_timestamp(to)
 
@@ -314,5 +333,5 @@ class Radiko(Platform):
         subprocess.run(cmd)
 
     def get_default_filename(self, program: Program) -> str:
-        dt = program.datetime.strftime("%Y%m%d%H%M")
-        return f"{program.station_id}_{dt}.m4a"
+        dt = program.pub_date.strftime("%Y-%m-%d-%H-%M")
+        return f"{program.program_id}_{dt}.m4a"

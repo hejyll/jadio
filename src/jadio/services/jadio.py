@@ -14,12 +14,18 @@ def _get_all_service_cls() -> List[Service]:
 
 
 class Jadio(Service):
+    """Class that supervises all service classes.
+
+    Args:
+        configs (dict): dict that defines the arguments for each service
+            class. key is `service_id`.
+    """
+
     def __init__(self, configs: Dict[str, Any]) -> None:
         super().__init__()
-        all_service_cls = _get_all_service_cls()
         self._services = {
             cls.service_id(): cls(**configs.get(cls.service_id(), {}))
-            for cls in all_service_cls
+            for cls in _get_all_service_cls()
         }
 
     def service_id(self, program: Program) -> str:

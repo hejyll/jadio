@@ -149,6 +149,16 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> P
 
 
 class Radiko(Service):
+    """radiko.jp service class.
+
+    Args:
+        mail (str): Premium member's email. `password` must also be set up.
+            Setting this up allows you to download programs area-free.
+        password (str): Premium member's password. `mail` must also be set up.
+            Setting this up allows you to download programs area-free.
+        timeout (int): Session timeout with the service.
+    """
+
     def __init__(
         self,
         mail: Optional[str] = None,
@@ -282,11 +292,15 @@ class Radiko(Service):
         return _parse_programs_tree(ret)
 
     def get_programs(self, only_downloadable: bool = False, **kwargs) -> List[Program]:
-        """
+        """Get all program data provided by the service.
+
         Args:
             only_downloadable (bool): Whether to get program data that cannot
                 be downloaded, i.e., programs that have not yet finished
                 broadcast.
+
+        Returns:
+            list of `Program`: All program data provided by the service.
         """
         ret = []
         now = datetime.datetime.now()

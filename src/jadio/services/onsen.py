@@ -80,6 +80,15 @@ def _convert_raw_data_to_program(
 
 
 class Onsen(Service):
+    """onsen.ag service class.
+
+    Args:
+        mail (str): Premium member's email. `password` must also be set up.
+            Setting this up allows you to download special programs.
+        password (str): Premium member's password. `mail` must also be set up.
+            Setting this up allows you to download special programs.
+    """
+
     def __init__(
         self, mail: Optional[str] = None, password: Optional[str] = None
     ) -> None:

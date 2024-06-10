@@ -37,6 +37,8 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> P
 
 
 class Hibiki(Service):
+    """hibiki-radio.jp service class."""
+
     def __init__(self) -> None:
         super().__init__()
         self._session = requests.session()

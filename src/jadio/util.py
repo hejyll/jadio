@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
@@ -152,7 +151,7 @@ def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
 
 
 def get_config_path() -> Path:
-    return Path.expanduser("~") / ".config" / "jadio" / "config.json"
+    return Path.home() / ".config" / "jadio" / "config.json"
 
 
 def load_config(path: Optional[Union[str, Path]] = None) -> Dict[str, str]:

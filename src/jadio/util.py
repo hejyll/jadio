@@ -1,7 +1,7 @@
 import datetime
 import json
 import os
-import re
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
@@ -151,20 +151,20 @@ def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
         return check_dict_deep(x[key], keys[1:])
 
 
-def get_config_path() -> str:
-    return os.path.join(os.path.expanduser("~"), ".config", "jadio", "config.json")
+def get_config_path() -> Path:
+    return Path.expanduser("~") / ".config" / "jadio" / "config.json"
 
 
-def load_config(path: Optional[str] = None) -> Dict[str, str]:
+def load_config(path: Optional[Union[str, Path]] = None) -> Dict[str, str]:
     path = path or get_config_path()
-    with open(path, "r") as fh:
+    with open(str(path), "r") as fh:
         return json.load(fh)
 
 
-def get_login_info_from_config(radio_name: str) -> Dict[str, str]:
+def get_login_info_from_config(service_id: str) -> Dict[str, str]:
     config = load_config()
-    if not check_dict_deep(config, [radio_name, "mail"]):
-        raise RuntimeError(f"'{radio_name}/mail' key is not found")
-    if not check_dict_deep(config, [radio_name, "password"]):
-        raise RuntimeError(f"'{radio_name}/password' key is not found")
-    return config[radio_name]
+    if not check_dict_deep(config, [service_id, "mail"]):
+        raise RuntimeError(f"'{service_id}/mail' key is not found")
+    if not check_dict_deep(config, [service_id, "password"]):
+        raise RuntimeError(f"'{service_id}/password' key is not found")
+    return config[service_id]

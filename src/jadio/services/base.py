@@ -118,13 +118,12 @@ class Service(abc.ABC):
             f" to {file_path}"
         )
         self._download_media(program, file_path)
-        # TODO: remove fetching stations
-        if program.station_id:
-            station = self.get_station_from_program(program)
-            artist = station.name
-        else:
-            artist = self.name(program)
         if set_tag:
+            if program.station_id:
+                station = self.get_station_from_program(program)
+                artist = station.name
+            else:
+                artist = self.name()
             set_mp4_tag(file_path, get_mp4_tag(artist, program, set_cover_image))
         return file_path
 

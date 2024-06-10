@@ -15,6 +15,7 @@ The following services are currently supported:
 jadio depends on the following apps:
 
 * ffmpeg
+  * It is used to download media files.
 * google-chrome
   * It is used to get program data from [onsen.ag](https://www.onsen.ag/).
 
@@ -200,7 +201,7 @@ To find the desired program or station, you can use `Program` and `Station`. The
 | `description` | str | Description of the program. | `raw_data.progs.*.desc` + `raw_data.progs.*.info` | extract from `https://www.onsen.ag/program/<directory_name>` | `raw_data.description` |
 | `information` | str | Information of the program. | construct from `raw_data.progs.*.attr.{ft,to}` | `raw_data.delivery_interval` | `raw_data.onair_information` |
 | `copyright` | str | Copyright of the program. | extract from [radiko.jp](https://radiko.jp) | `raw_data.copyright` | `raw_data.copyright` |
-| `link_url` | str | URL of the program link. | `raw_data.progs.*.url` | construct from `raw_data.directory_name`<br/>`https://www.onsen.ag/program/<directory_name>` | `raw_data.share_url` |
+| `link_url` | str | URL of the program link. | `raw_data.progs.*.url` | construct from `raw_data.directory_name`<br/>(`https://www.onsen.ag/program/<directory_name>`) | `raw_data.share_url` |
 | `image_url` | str | URL of the program image. | `raw_data.progs.*.img` | `raw_data.contents.*.poster_image_url` | `raw_data.pc_image_url` |
 | `performers` | list of str | Performers in the program. | `raw_data.progs.*.pfm` | `raw_data.performers.*.name` | `raw_data.cast` |
 | `guests` | list of str | Guests in the program. | N/A | `raw_data.guests.*.name` | N/A |
@@ -211,6 +212,7 @@ To find the desired program or station, you can use `Program` and `Station`. The
 
 * Difference between program and episode: program indicates the radio program itself, while episode indicates the date and time of its release and how many times it has been broadcast.
 * Difference between `description` and `information`: The difference between the two is ambiguous, but `information` often includes a (regular) publication date and time.
+* You can tag media files by setting the `set_tag` and `set_cover_image` arguments of `Service.download()` to True. The tag data is generated from `Program`. See [`tag.py`](src/jadio/tag.py) for details.
 
 ### [`Station`](src/jadio/station.py)
 

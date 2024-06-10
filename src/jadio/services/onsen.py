@@ -41,11 +41,14 @@ def _get_description_from_program_web_site(
 
 
 def _convert_raw_data_to_program(
-    raw_data: Dict[str, Any], service_id: str, driver: webdriver.Chrome
+    raw_data: Dict[str, Any], service_id: str, driver: Optional[webdriver.Chrome] = None
 ) -> Program:
     content = raw_data["contents"][0]
     directory_name = raw_data["directory_name"]
-    description = _get_description_from_program_web_site(directory_name, driver)
+    if driver:
+        description = _get_description_from_program_web_site(directory_name, driver)
+    else:
+        description = None
     # streaming_url:
     # https://onsen-ma3phlsvod.sslcs.cdngc.net/onsen-ma3pvod/_definst_/<yyyymm>/*.mp4/playlist.m3u
     year = content["streaming_url"].split("/")[-3][:4]
@@ -125,7 +128,17 @@ class Onsen(Service):
         ret = self._driver.execute_script("return JSON.stringify(window.__NUXT__);")
         return json.loads(ret)
 
-    def get_programs(self, **kwargs) -> List[Program]:
+    def get_programs(self, more_data: bool = False, **kwargs) -> List[Program]:
+        """Get all program data provided by the service.
+
+        Args:
+            more_data (bool): Whether to get more data, here a `description`.
+                By enabling this, a more program data can be gotten, but the
+                run time will be longer.
+
+        Returns:
+            list of `Program`: All program data provided by the service.
+        """
         information = self._get_information()
         ret = []
         for raw_program in information["state"]["programs"]["programs"]["all"]:
@@ -136,7 +149,7 @@ class Onsen(Service):
                 raw_data["contents"] = [content]
                 ret.append(
                     _convert_raw_data_to_program(
-                        raw_data, self.service_id(), self._driver
+                        raw_data, self.service_id(), self._driver if more_data else None
                     )
                 )
         logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")

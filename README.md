@@ -45,9 +45,7 @@ $ pip install git+https://github.com/hejyll/jadio
 
 ## Usage
 
-### Examples
-
-#### Typical use case
+### Typical use case
 
 Here is a typical use case of jadio to do the following:
 
@@ -144,7 +142,7 @@ Save: {file_path}
 
 </div></details>
 
-##### `configs` argument of `jadio.Jadio`
+#### `configs` argument of `jadio.Jadio`
 
 The `configs` argument of `jadio.Jadio` is a `dict` variable (key is `Service.service_id()`) that defines the arguments of each service class.
 
@@ -159,7 +157,7 @@ service_configs = {
 
 See docstring in the file under [`src/jadio/services/`](src/jadio/services/) for details of arguments for each service class.
 
-#### Simple use case for radiko.jp
+### Simple use case for radiko.jp
 
 Each service class (`jadio.Radiko`, `jadio.Onsen` and `jadio.Hibiki`) can be used independently without using `jadio.Jadio`.
 

@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 import pytest
 import requests
+
 from jadio import Program, Radiko
 from jadio.util import check_dict_deep, get_login_info_from_config
 

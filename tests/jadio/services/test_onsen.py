@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from jadio import Onsen
 from jadio.util import check_dict_deep, get_login_info_from_config
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from ..program import Program
 from ..station import Station
@@ -50,6 +50,20 @@ class Jadio(Service):
     def get_programs(self, **kwargs) -> List[Program]:
         return sum(
             [service.get_programs(**kwargs) for service in self._services.values()], []
+        )
+
+    def download(
+        self,
+        program: Program,
+        file_path: Optional[Union[str, Path]] = None,
+        set_tag: bool = True,
+        set_cover_image: bool = True,
+    ) -> Path:
+        return self.get_service_from_program(program).download(
+            program=program,
+            file_path=file_path,
+            set_tag=set_tag,
+            set_cover_image=set_cover_image,
         )
 
     def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:

@@ -39,8 +39,8 @@ brew install --cask google-chrome
 
 ### Install jadio
 
-```console
-$ pip install git+https://github.com/hejyll/jadio
+```bash
+pip install git+https://github.com/hejyll/jadio
 ```
 
 ## Usage
@@ -54,6 +54,8 @@ Here is a typical use case of jadio to do the following:
 * Download media files of the programs picked up
 
 By using `jadio.Jadio`, a class that supervises all radio service classes (`jadio.Radiko`, `jadio.Onsen` and `jadio.Hibiki`), it is possible to get program data across services.
+
+The following sample is to find and download programs from all services that contain the keyword "鬼滅の刃" in the program title.
 
 ```python
 import logging
@@ -181,40 +183,47 @@ See docstring in the Python file under [`src/jadio/`](src/jadio).
 
 ## Data fields
 
+To find the desired program or station, you can use `Program` and `Station`. The following shows what kind of data these consist of so that you can create search queries.
+
 ### [`Program`](src/jadio/program.py)
 
-Field name | Type | Description
--- | -- | --
-`service_id` | str or int | ID to identify the service. Usually, URL of the service is specified.
-`station_id` | str or int | ID to identify the station. It is used only when a service provides programs from multiple broadcasting stations, as is the case with radiko.jp.
-`program_id` | str or int | ID to identify the program.
-`episode_id` | str or int | ID to identify the program episode.
-`pub_date` | datetime | Date and time of public launch.
-`duration` | int or float | Duration of the program episode [seconds].
-`program_title` | str | Title of the program.
-`episode_title` | str | Title of the program episode.
-`description` | str | Description of the program.
-`information` | str | Information of the program. The difference from description is ambiguous, but information often describes the broadcast time.
-`copyright` | str | Copyright of the program.
-`link_url` | str | URL of the program link.
-`image_url` | str | URL of the program image.
-`performers` | list of str | Performers in the program.
-`guests` | list of str | Guests in the program.
-`is_video` | bool | Whether the program episode is a video.
-`raw_data` | dict | Raw data of the program.
+| Field name | Type | Description | `Radiko.get_programs()` | `Onsen.get_programs()` | `Hibiki.get_programs()` |
+| -- | -- | -- | -- | -- | -- |
+| `service_id` | str or int | ID to identify the service. | `"radiko.jp"` | `"onsen.ag"` | `"hibiki-radio.jp"` |
+| `station_id` | str or int | ID to identify the station. | `raw_data.attr.id` | N/A | N/A |
+| `program_id` | str or int | ID to identify the program. | construct from `raw_data.attr.id` and `raw_data.progs.*.attr.ft`<br/>(`<station-id>-<day-of-week>-<start-time>`) | `raw_data.directory_name` | `raw_data.access_id` |
+| `episode_id` | str or int | ID to identify the program episode. | `raw_data.progs.*.attr.id` | `raw_data.contents.*.id` | `raw_data.episode.id` |
+| `pub_date` | datetime | Date and time of public launch. | `raw_data.progs.*.attr.ft` | construct from `raw_data.streaming_url` and `raw_data.delivery_date` | `raw_data.episode_updated_at` |
+| `duration` | int or float | Duration of the program episode [seconds]. | `raw_data.progs.*.attr.dur` | N/A | `raw_data.episode.video.duration` |
+| `program_title` | str | Title of the program. | `raw_data.progs.*.title` | `raw_data.title` | `raw_data.name` |
+| `episode_title` | str | Title of the program episode. | construct from `raw_data.progs.*.attr.ft` | `raw_data.contents.*.title` | `raw_data.episode.name` |
+| `description` | str | Description of the program. | `raw_data.progs.*.desc` + `raw_data.progs.*.info` | extract from `https://www.onsen.ag/program/<directory_name>` | `raw_data.description` |
+| `information` | str | Information of the program. | construct from `raw_data.progs.*.attr.{ft,to}` | `raw_data.delivery_interval` | `raw_data.onair_information` |
+| `copyright` | str | Copyright of the program. | extract from [radiko.jp](https://radiko.jp) | `raw_data.copyright` | `raw_data.copyright` |
+| `link_url` | str | URL of the program link. | `raw_data.progs.*.url` | construct from `raw_data.directory_name`<br/>`https://www.onsen.ag/program/<directory_name>` | `raw_data.share_url` |
+| `image_url` | str | URL of the program image. | `raw_data.progs.*.img` | `raw_data.contents.*.poster_image_url` | `raw_data.pc_image_url` |
+| `performers` | list of str | Performers in the program. | `raw_data.progs.*.pfm` | `raw_data.performers.*.name` | `raw_data.cast` |
+| `guests` | list of str | Guests in the program. | N/A | `raw_data.guests.*.name` | N/A |
+| `is_video` | bool | Whether the program episode is a video. | always false | `raw_data.contents.*.movie` | `raw_data.episode.media_type` (audio: null or 1, video: others) |
+| `raw_data` | dict | Raw data of the program. | extract from `https://radiko.jp/v3/program/station/weekly/<station_id>.xml` | extract from [onsen.ag](https://www.onsen.ag/) | extract from `https://vcms-api.hibiki-radio.jp/api/v1/programs` |
+
+**NOTE**
+
+* Difference between program and episode: program indicates the radio program itself, while episode indicates the date and time of its release and how many times it has been broadcast.
+* Difference between `description` and `information`: The difference between the two is ambiguous, but `information` often includes a (regular) publication date and time.
 
 ### [`Station`](src/jadio/station.py)
 
 It is used only when a service provides programs from multiple broadcasting stations, as is the case with radiko.jp.
 
-Field name | Type | Description
--- | -- | --
-`service_id` | int or str | ID to identify the service. Usually, URL of the service is specified.
-`station_id` | int or str | ID to identify the station.
-`name` | str | Name of the station.
-`description` | str | Description of the station.
-`link_url` | str | URL of the station link.
-`image_url` | str | URL of the station image.
+| Field name | Type | Description |
+| -- | -- | -- |
+| `service_id` | int or str | ID to identify the service. |
+| `station_id` | int or str | ID to identify the station. |
+| `name` | str | Name of the station. |
+| `description` | str | Description of the station. |
+| `link_url` | str | URL of the station link. |
+| `image_url` | str | URL of the station image. |
 
 ## License
 

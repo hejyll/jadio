@@ -281,14 +281,25 @@ class Radiko(Service):
             return {}
         return _parse_programs_tree(ret)
 
-    def get_programs(self, **kwargs) -> List[Program]:
+    def get_programs(self, only_downloadable: bool = False, **kwargs) -> List[Program]:
+        """
+        Args:
+            only_downloadable (bool): Whether to get program data that cannot
+                be downloaded, i.e., programs that have not yet finished
+                broadcast.
+        """
         ret = []
+        now = datetime.datetime.now()
         for station in self.get_stations():
             raw_programs = self._get_program_station_weekly(station.station_id)
             if not raw_programs:
                 continue
             raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1
             for raw_program in raw_programs["progs"]:
+                if only_downloadable and to_datetime(raw_program["attr"]["to"]) > now:
+                    # Programs that have not yet finished cannot be downloaded.
+                    # attr.to represents the broadcast end date and time.
+                    continue
                 raw_data = {
                     "attr": raw_programs["attr"],
                     "name": raw_programs["name"],

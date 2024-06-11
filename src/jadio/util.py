@@ -1,5 +1,6 @@
 import datetime
 import json
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
@@ -155,7 +156,10 @@ def get_config_path() -> Path:
 
 
 def load_config(path: Optional[Union[str, Path]] = None) -> Dict[str, str]:
-    path = path or get_config_path()
+    path = Path(path or get_config_path())
+    if not path.exists():
+        warnings.warn(f"config file is not found: {path}")
+        return {}
     with open(str(path), "r") as fh:
         return json.load(fh)
 

@@ -122,6 +122,23 @@ def _get_information(ft: datetime.datetime, to: datetime.datetime) -> str:
     return f"{dow_ja}曜日 {ft_h:02}:{ft_m:02}〜{to_h:02}:{to_m:02}"
 
 
+def _get_performers(pfm: Union[str, None]) -> Union[str, List[str], None]:
+    """Get performers field from progs.*.pfm.
+
+    Since the format of pfm is different for each program, it is not always
+    possible to format performers as expected.
+    """
+    if pfm is None:
+        return None
+    if ", " in pfm:
+        return pfm.split(", ")
+    elif "、" in pfm:
+        return pfm.split("、")
+    elif "，" in pfm:
+        return pfm.split("，")
+    return pfm
+
+
 def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> Program:
     raw_prog = raw_data["progs"][0]
     station_id = raw_data["attr"]["id"]
@@ -141,7 +158,7 @@ def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> P
         copyright=RADIKO_COPYRIGHTS,
         link_url=raw_prog["url"],
         image_url=raw_prog["img"],
-        performers=raw_prog["pfm"],
+        performers=_get_performers(raw_prog["pfm"]),
         guests=None,
         is_video=False,
         raw_data=raw_data,

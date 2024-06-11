@@ -1,23 +1,28 @@
-from __future__ import annotations
+from dataclasses import dataclass
+from typing import Optional, Union
 
-import copy
-import dataclasses
-from typing import Any, Dict, Optional
-
-from serdescontainer import BaseContainer
+from dataclasses_json import DataClassJsonMixin
 
 
-@dataclasses.dataclass
-class Station(BaseContainer):
-    id: str
-    platform_id: str
+@dataclass
+class Station(DataClassJsonMixin):
+    """Station data.
+    It is used only when a service provides programs from multiple
+    broadcasting stations, as is the case with radiko.jp.
+
+    Attributes:
+        service_id (str or int): ID to identify the service. Usually, URL of
+            the service is specified.
+        station_id (str or int): ID to identify the station.
+        name (str): Name of the station.
+        description (str): Description of the station.
+        link_url (str): URL of the station link.
+        image_url (str): URL of the station image.
+    """
+
+    service_id: Union[int, str]
+    station_id: Union[int, str]
     name: str
-    ascii_name: Optional[str] = None
-    url: Optional[str] = None
+    description: Optional[str] = None
+    link_url: Optional[str] = None
     image_url: Optional[str] = None
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> Station:
-        args = copy.deepcopy(data)
-        args.pop("_id", None)  # remove mongodb id
-        return super().from_dict(args)

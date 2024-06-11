@@ -4,17 +4,20 @@ import logging
 import re
 import subprocess
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
 import requests
 
 from ..program import Program
 from ..station import Station
-from ..util import get_content, get_emails_from_text, to_datetime
-from .base import Platform
+from ..util import get_content, to_datetime
+from .base import Service
 
 logger = logging.getLogger(__name__)
+
+RADIKO_COPYRIGHTS = "Copyright \xa9 radiko co., Ltd. All rights reserved"
 
 
 def _get_partialkey(offset: int, length: int) -> bytes:
@@ -104,36 +107,75 @@ def _parse_programs_tree(tree: ElementTree.Element) -> Dict[str, Any]:
     }
 
 
-def _convert_raw_data_to_program(
-    raw_data: Dict[str, Any], station_id: str, platform_id: str
-) -> Program:
+def _get_program_id(station_id: str, ft: datetime.datetime) -> str:
+    dow = ft.strftime("%a").lower()
+    time = ft.strftime("%H%M")
+    return f"{station_id.lower()}_{dow}_{time}"
+
+
+def _get_information(ft: datetime.datetime, to: datetime.datetime) -> str:
+    # Japanese radio broadcast stations express a day as 5:00-29:00.
+    dow_ja_table = {0: "月", 1: "火", 2: "水", 3: "木", 4: "金", 5: "土", 6: "日"}
+    dow_ja = dow_ja_table.get((ft - datetime.timedelta(hours=5)).weekday())
+    ft_h, ft_m = ft.hour + (24 if ft.hour < 5 else 0), ft.minute
+    to_h, to_m = to.hour + (24 if to.hour < 5 else 0), to.minute
+    return f"{dow_ja}曜日 {ft_h:02}:{ft_m:02}〜{to_h:02}:{to_m:02}"
+
+
+def _get_performers(pfm: Union[str, None]) -> Union[str, List[str], None]:
+    """Get performers field from progs.*.pfm.
+
+    Since the format of pfm is different for each program, it is not always
+    possible to format performers as expected.
+    """
+    if pfm is None:
+        return None
+    if ", " in pfm:
+        return pfm.split(", ")
+    elif "、" in pfm:
+        return pfm.split("、")
+    elif "，" in pfm:
+        return pfm.split("，")
+    return pfm
+
+
+def _convert_raw_data_to_program(raw_data: Dict[str, Any], service_id: str) -> Program:
     raw_prog = raw_data["progs"][0]
-    emails = get_emails_from_text(raw_prog["desc"])
-    if not emails:
-        emails = get_emails_from_text(raw_prog["info"])
+    station_id = raw_data["attr"]["id"]
     ft = to_datetime(raw_prog["attr"]["ft"])
+    to = to_datetime(raw_prog["attr"]["to"])
     return Program(
-        id=raw_prog["attr"]["id"],
+        service_id=service_id,
         station_id=station_id,
-        platform_id=platform_id,
-        name=raw_prog["title"],
-        url=raw_prog["url"],
-        description=raw_prog["desc"],
-        information=raw_prog["info"],
-        performers=[raw_prog["pfm"]],
-        copyright="Copyright \xa9 radiko co., Ltd. All rights reserved",
+        program_id=_get_program_id(station_id, ft),
         episode_id=raw_prog["attr"]["id"],
-        episode_name=ft.strftime("%Y/%m/%d %H:%M"),
-        datetime=ft,
+        pub_date=ft,
         duration=raw_prog["attr"]["dur"],
-        ascii_name=emails[0].split("@")[0] if len(emails) > 1 else None,
+        program_title=raw_prog["title"],
+        episode_title=ft.strftime("%Y/%m/%d %H:%M"),
+        description=raw_prog["desc"] + "<br>" + raw_prog["info"],
+        information=_get_information(ft, to),
+        copyright=RADIKO_COPYRIGHTS,
+        link_url=raw_prog["url"],
         image_url=raw_prog["img"],
+        performers=_get_performers(raw_prog["pfm"]),
+        guests=None,
         is_video=False,
         raw_data=raw_data,
     )
 
 
-class Radiko(Platform):
+class Radiko(Service):
+    """radiko.jp service class.
+
+    Args:
+        mail (str): Premium member's email. `password` must also be set up.
+            Setting this up allows you to download programs area-free.
+        password (str): Premium member's password. `mail` must also be set up.
+            Setting this up allows you to download programs area-free.
+        timeout (int): Session timeout with the service.
+    """
+
     def __init__(
         self,
         mail: Optional[str] = None,
@@ -151,23 +193,15 @@ class Radiko(Platform):
         self._area_info = None
 
     @classmethod
-    @property
-    def id(self) -> str:
+    def service_id(cls) -> str:
         return "radiko.jp"
 
     @classmethod
-    @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "ラジコ"
 
     @classmethod
-    @property
-    def ascii_name(self) -> str:
-        return "radiko"
-
-    @classmethod
-    @property
-    def url(self) -> str:
+    def link_url(cls) -> str:
         return "https://radiko.jp/"
 
     def _get(self, href: str, content_type: str, **kwargs) -> Any:
@@ -189,7 +223,7 @@ class Radiko(Platform):
                 "json",
                 data={"mail": self._mail, "pass": self._password},
             )
-            logger.info(f"Logged in to {self.id} as {self._mail}")
+            logger.info(f"Logged in to {self.service_id()} as {self._mail}")
 
         common_headers = {
             "X-Radiko-App": "pc_html5",
@@ -237,19 +271,28 @@ class Radiko(Platform):
     def _get_station_region_full(self) -> Dict[str, str]:
         return _parse_stations_tree(self._get("v3/station/region/full.xml", "tree"))
 
+    @lru_cache(maxsize=32)
+    def _get_station_list_area(self) -> Dict[str, str]:
+        area_id = self._area_info[0]
+        return _parse_stations_tree(self._get(f"v2/station/list/{area_id}.xml", "tree"))
+
     @lru_cache(maxsize=1)
-    def get_stations(self) -> List[Station]:
+    def get_stations(self, **kwargs) -> List[Station]:
         ret = []
-        for raw_station in self._get_station_region_full():
+        get_station_fn = self._get_station_list_area
+        if self._user_info:
+            # For premium members, area-free downloading is available.
+            get_station_fn = self._get_station_region_full
+        for raw_station in get_station_fn():
             image_url = None
             if len(raw_station["logos"]) > 0:
                 image_url = raw_station["logos"][0]["href"]
             station = Station(
-                id=raw_station["id"],
-                platform_id=self.id,
+                service_id=self.service_id(),
+                station_id=raw_station["id"],
                 name=raw_station["name"],
-                ascii_name=raw_station["ascii_name"],
-                url=raw_station["href"],
+                description=None,
+                link_url=raw_station["href"],
                 image_url=image_url,
             )
             ret.append(station)
@@ -265,33 +308,52 @@ class Radiko(Platform):
             return {}
         return _parse_programs_tree(ret)
 
-    def get_programs(self, filters: Optional[List[str]] = None) -> List[Program]:
+    def get_programs(self, only_downloadable: bool = False, **kwargs) -> List[Program]:
+        """Get all program data provided by the service.
+
+        Args:
+            only_downloadable (bool): Whether to get program data that cannot
+                be downloaded, i.e., programs that have not yet finished
+                broadcast.
+
+        Returns:
+            list of `Program`: All program data provided by the service.
+        """
         ret = []
+        now = datetime.datetime.now()
         for station in self.get_stations():
-            if filters and station.id not in filters:
-                continue
-            raw_programs = self._get_program_station_weekly(station.id)
+            raw_programs = self._get_program_station_weekly(station.station_id)
             if not raw_programs:
                 continue
             raw_programs = raw_programs["stations"][0]  # len(raw_programs) == 1
             for raw_program in raw_programs["progs"]:
+                if only_downloadable and to_datetime(raw_program["attr"]["to"]) > now:
+                    # Programs that have not yet finished cannot be downloaded.
+                    # attr.to represents the broadcast end date and time.
+                    continue
                 raw_data = {
                     "attr": raw_programs["attr"],
                     "name": raw_programs["name"],
                     "date": raw_programs["date"],
                     "progs": [raw_program],
                 }
-                ret.append(_convert_raw_data_to_program(raw_data, station.id, self.id))
-        logger.info(f"Get {len(ret)} program(s) from {self.id}")
+                ret.append(_convert_raw_data_to_program(raw_data, self.service_id()))
+        logger.info(f"Get {len(ret)} program(s) from {self.service_id()}")
         return ret
 
-    def download_media(self, program: Program, filename: str) -> None:
+    def _download_media(self, program: Program, file_path: Union[str, Path]) -> None:
         """Support only time-shift download"""
+
+        # check required fields of program
+        required_fields = ["station_id", "pub_date", "duration"]
+        for field in required_fields:
+            if getattr(program, field) is None:
+                raise ValueError(f"{field} field is required")
 
         def to_timestamp(x: datetime.datetime) -> str:
             return x.strftime("%Y%m%d%H%M%S")
 
-        ft = program.datetime
+        ft = program.pub_date
         to = ft + datetime.timedelta(seconds=program.duration)
         ft, to = to_timestamp(ft), to_timestamp(to)
 
@@ -310,9 +372,9 @@ class Radiko(Platform):
         cmd += ["-bsf:a", "aac_adtstoasc"]
         cmd += ["-timeout", str(120)]
         cmd += ["-t", str(program.duration)]
-        cmd += [filename]
+        cmd += [str(file_path)]
         subprocess.run(cmd)
 
-    def get_default_filename(self, program: Program) -> str:
-        dt = program.datetime.strftime("%Y%m%d%H%M")
-        return f"{program.station_id}_{dt}.m4a"
+    def _get_default_file_path(self, program: Program) -> Path:
+        dt = program.pub_date.strftime("%Y-%m-%d-%H-%M")
+        return Path(f"{program.program_id}_{dt}.m4a")

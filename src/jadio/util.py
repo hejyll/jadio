@@ -1,7 +1,7 @@
 import datetime
 import json
-import os
-import re
+import warnings
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from xml.etree import ElementTree
 
@@ -139,10 +139,6 @@ def get_image(url: str) -> Optional[bytes]:
     return get_content(response, content_type="byte")
 
 
-def get_emails_from_text(x: str) -> List[str]:
-    return re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", x)
-
-
 def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
     if len(keys) == 0:
         return True
@@ -155,20 +151,23 @@ def check_dict_deep(x: Dict[Any, Any], keys: List[str]) -> bool:
         return check_dict_deep(x[key], keys[1:])
 
 
-def get_config_path() -> str:
-    return os.path.join(os.path.expanduser("~"), ".config", "jadio", "config.json")
+def get_config_path() -> Path:
+    return Path.home() / ".config" / "jadio" / "config.json"
 
 
-def load_config(path: Optional[str] = None) -> Dict[str, str]:
-    path = path or get_config_path()
-    with open(path, "r") as fh:
+def load_config(path: Optional[Union[str, Path]] = None) -> Dict[str, str]:
+    path = Path(path or get_config_path())
+    if not path.exists():
+        warnings.warn(f"config file is not found: {path}")
+        return {}
+    with open(str(path), "r") as fh:
         return json.load(fh)
 
 
-def get_login_info_from_config(radio_name: str) -> Dict[str, str]:
+def get_login_info_from_config(service_id: str) -> Dict[str, str]:
     config = load_config()
-    if not check_dict_deep(config, [radio_name, "mail"]):
-        raise RuntimeError(f"'{radio_name}/mail' key is not found")
-    if not check_dict_deep(config, [radio_name, "password"]):
-        raise RuntimeError(f"'{radio_name}/password' key is not found")
-    return config[radio_name]
+    if not check_dict_deep(config, [service_id, "mail"]):
+        raise RuntimeError(f"'{service_id}/mail' key is not found")
+    if not check_dict_deep(config, [service_id, "password"]):
+        raise RuntimeError(f"'{service_id}/password' key is not found")
+    return config[service_id]

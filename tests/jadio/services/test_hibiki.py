@@ -1,5 +1,5 @@
-import os
 import tempfile
+from pathlib import Path
 
 from jadio import Hibiki
 from jadio.util import check_dict_deep
@@ -11,8 +11,8 @@ def test_login_without_user_info():
 
 
 def test_api_get_programs():
-    with Hibiki() as radio:
-        raw_program = radio._get("programs")[0]
+    with Hibiki() as service:
+        raw_program = service._get("programs")[0]
         need_keys = [
             "id",
             "name",
@@ -38,22 +38,14 @@ def test_api_get_programs():
 
 
 def test_get_programs():
-    with Hibiki() as radio:
-        programs = radio.get_programs()
-        assert len(programs) > 0
-
-
-def test_get_programs_with_filters():
-    with Hibiki() as radio:
-        target_id = radio._get("programs")[0]["access_id"]
-        programs = radio.get_programs(filters=[target_id])
+    with Hibiki() as service:
+        programs = service.get_programs()
         assert len(programs) > 0
 
 
 def test_download():
-    with Hibiki() as radio, tempfile.TemporaryDirectory() as tmp_dir:
-        target_id = radio._get("programs")[0]["access_id"]
-        programs = radio.get_programs(filters=[target_id])
-        filename = os.path.join(tmp_dir, "hoge.mp4")
-        radio.download(programs[0], filename)
-        assert os.path.exists(filename)
+    with Hibiki() as service, tempfile.TemporaryDirectory() as tmp_dir:
+        program = service.get_programs()[0]
+        file_path = Path(tmp_dir) / "media.m4a"
+        service.download(program, file_path)
+        assert file_path.exists()

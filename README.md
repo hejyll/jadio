@@ -48,6 +48,8 @@ pip install git+https://github.com/hejyll/jadio
 
 ### Typical use case
 
+A simplified sample of [`samples/keyword_download.py`](samples/keyword_download.py) will be used as an example.
+
 Here is a typical use case of jadio to do the following:
 
 * Get program data from various radio broadcast services
@@ -56,7 +58,7 @@ Here is a typical use case of jadio to do the following:
 
 By using `jadio.Jadio`, a class that supervises all radio service classes (`jadio.Radiko`, `jadio.Onsen` and `jadio.Hibiki`), it is possible to get program data across services.
 
-The following sample is to find and download programs from all services that contain the keyword "鬼滅の刃" in the program title.
+The following sample is to find and download programs from all services that contain the keyword "鬼滅の刃" in the program title. In [`samples/keyword_download.py`](samples/keyword_download.py), other fields than `program_title` are also searched.
 
 ```python
 import logging
@@ -78,10 +80,10 @@ service_configs = jadio.load_config()
 # jadio class can be used to handle all platforms.
 with jadio.Jadio(service_configs) as service:
     # Get program data from all services.
-    # With `only_downloadable=True`, program data that cannot be downloaded,
-    # such as unbroadcasted programs, can be avoided.
     all_programs = service.get_programs(
+        # Program data that cannot be downloaded,　such as unbroadcasted programs, can be avoided.
         only_downloadable=True,
+        # Get more data, but longer run time.
         more_data=False,
     )
 
@@ -98,22 +100,26 @@ with jadio.Jadio(service_configs) as service:
         # defined by the service is used and returned in download().
         file_path = service.download(
             program,
-            set_tag=True,  # Set tag data in the downloaded media file. (default: True)
-            set_cover_image=True,  # Set cover image in the downloaded media file. (default: True)
+            # Set tag data in the downloaded media file. (default: True)
+            set_tag=True,
+            # Set cover image in the downloaded media file. (default: True)
+            set_cover_image=True,
         )
-        print("Save: {file_path}")
+        print(f"Save: {file_path}")
 
         # Programs can be (1) serialized in JSON format or (2) converted to dict.
         # This makes it easy to save program data in a file and aggregate multiple programs.
+
         # (1) serialize in JSON format
         with open(str(file_path).replace(file_path.suffix, ".json"), "w") as fp:
             fp.write(program.to_json(indent=2, ensure_ascii=False))
+
         # (2) convert to dict
         # raw_data should be excluded from print output, as it is an obstacle.
         # It is the raw data obtained from services and is used to create Program objects and download media files.
         program_dict = program.to_dict()
         program_dict.pop("raw_data")
-        print(program_dict)
+        print(f"Downloaded program: {program_dict}")
 ```
 
 <details><summary>Console output for this sample</summary><div>
@@ -130,13 +136,13 @@ with jadio.Jadio(service_configs) as service:
 
 Start: テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』
 2024-06-11 07:45:20,279 - INFO - jadio.services.base: Download radiko.jp / テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』 / 2024/06/08 19:00 to lfr_sat_1900_2024-06-08-19-00.m4a
-Save: {file_path}
-{'service_id': 'radiko.jp', 'station_id': 'LFR', 'program_id': 'lfr_sat_1900', 'episode_id': 10063611, 'pub_date': datetime.datetime(2024, 6, 8, 19, 0), 'duration': 1800, 'program_title': 'テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』', 'episode_title': '2024/06/08 19:00', 'description': '新シリーズ「柱稽古編」の放送開始に合わせて、テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』をレギュラー放送。テレビアニメ「鬼滅の刃」の魅力を届けていきます。<br>番組ホームページは<a href="https://www.1242.com/kimetsu/">こちら</a><br><br>twitterハッシュタグは「<a href="http://twitter.com/search?q=%23%E9%AC%BC%E6%BB%85%E3%83%A9%E3%83%82%E3%83%B2">#鬼滅ラヂヲ</a>」', 'information': '土曜日 19:00〜19:30', 'copyright': 'Copyright © radiko co., Ltd. All rights reserved', 'link_url': 'https://www.1242.com/kimetsu/', 'image_url': 'https://program-static.cf.radiko.jp/o8tefk6a3a.jpg', 'performers': '', 'guests': None, 'is_video': False}
+Save: lfr_sat_1900_2024-06-08-19-00.m4a
+Downloaded program: {'service_id': 'radiko.jp', 'station_id': 'LFR', 'program_id': 'lfr_sat_1900', 'episode_id': 10063611, 'pub_date': datetime.datetime(2024, 6, 8, 19, 0), 'duration': 1800, 'program_title': 'テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』', 'episode_title': '2024/06/08 19:00', 'description': '新シリーズ「柱稽古編」の放送開始に合わせて、テレビアニメ「鬼滅の刃」公式ラジオ『鬼滅ラヂヲ』をレギュラー放送。テレビアニメ「鬼滅の刃」の魅力を届けていきます。<br>番組ホームページは<a href="https://www.1242.com/kimetsu/">こちら</a><br><br>twitterハッシュタグは「<a href="http://twitter.com/search?q=%23%E9%AC%BC%E6%BB%85%E3%83%A9%E3%83%82%E3%83%B2">#鬼滅ラヂヲ</a>」', 'information': '土曜日 19:00〜19:30', 'copyright': 'Copyright © radiko co., Ltd. All rights reserved', 'link_url': 'https://www.1242.com/kimetsu/', 'image_url': 'https://program-static.cf.radiko.jp/o8tefk6a3a.jpg', 'performers': '', 'guests': None, 'is_video': False}
 
 Start: テレビアニメ「鬼滅の刃」公式ラジオ　鬼滅ラヂヲ　WEB版
 2024-06-11 07:45:30,827 - INFO - jadio.services.base: Download onsen.ag / テレビアニメ「鬼滅の刃」公式ラジオ　鬼滅ラヂヲ　WEB版 / 第83回 to kimetsu_18474.m4a
-Save: {file_path}
-{'service_id': 'onsen.ag', 'station_id': None, 'program_id': 'kimetsu', 'episode_id': 18474, 'pub_date': datetime.datetime(2024, 6, 4, 0, 0), 'duration': None, 'program_title': 'テレビアニメ「鬼滅の刃」公式ラジオ\u3000鬼滅ラヂヲ\u3000WEB版', 'episode_title': '第83回', 'description': None, 'information': None, 'copyright': 'ⓒ吾峠呼世晴／集英社・アニプレックス・ufotable', 'link_url': 'https://www.onsen.ag/program/kimetsu', 'image_url': 'https://d3bzklg4lms4gh.cloudfront.net/program_info/image/default/production/4f/55/70a0eb23c92c177df632c2c6b6af42f29152/image?v=1717486197', 'performers': ['櫻井孝宏', '小西克幸'], 'guests': [], 'is_video': False}
+Save: kimetsu_18474.m4a
+Downloaded program: {'service_id': 'onsen.ag', 'station_id': None, 'program_id': 'kimetsu', 'episode_id': 18474, 'pub_date': datetime.datetime(2024, 6, 4, 0, 0), 'duration': None, 'program_title': 'テレビアニメ「鬼滅の刃」公式ラジオ\u3000鬼滅ラヂヲ\u3000WEB版', 'episode_title': '第83回', 'description': None, 'information': None, 'copyright': 'ⓒ吾峠呼世晴／集英社・アニプレックス・ufotable', 'link_url': 'https://www.onsen.ag/program/kimetsu', 'image_url': 'https://d3bzklg4lms4gh.cloudfront.net/program_info/image/default/production/4f/55/70a0eb23c92c177df632c2c6b6af42f29152/image?v=1717486197', 'performers': ['櫻井孝宏', '小西克幸'], 'guests': [], 'is_video': False}
 ```
 
 **NOTE**

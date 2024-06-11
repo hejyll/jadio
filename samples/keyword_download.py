@@ -33,12 +33,10 @@ def main():
     with jadio.Jadio(service_configs) as service:
         # Get program data from all services.
         all_programs = service.get_programs(
-            # With `only_downloadable=True`, program data that cannot be
-            # downloaded,　such as unbroadcasted programs, can be avoided
-            # (for Radiko service).
+            # Program data that cannot be downloaded,　such as unbroadcasted
+            # programs, can be avoided (for Radiko service).
             only_downloadable=True,
-            # With `more_data=True`, get more data, but longer run time
-            # (for Onsen service).
+            # Get more data, but longer run time (for Onsen service).
             more_data=False,
         )
 
@@ -62,7 +60,13 @@ def main():
 
             # If file_path is not specified in download(), the default file path
             # defined by the service is used and returned in download().
-            file_path = service.download(program)
+            file_path = service.download(
+                program,
+                # Set tag data in the downloaded media file. (default: True)
+                set_tag=True,
+                # Set cover image in the downloaded media file. (default: True)
+                set_cover_image=True,
+            )
             print(f"Save: {file_path}")
 
             # Programs can be (1) serialized in JSON format or (2) converted
